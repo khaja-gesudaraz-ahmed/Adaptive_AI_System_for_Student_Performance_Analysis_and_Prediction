@@ -1,0 +1,537 @@
+{% extends "base.html" %}
+
+{% block title %}Student Registration — Student Performance Analyzer & Marks Prediction System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+
+            <div class="card card-custom shadow-sm border-0 mb-4">
+                <div class="card-header bg-slate-900 text-white p-4 border-0 rounded-top-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="badge bg-primary-subtle text-primary mb-2 px-3 py-1 rounded-pill fw-bold">Admission & Evaluation Portal</span>
+                            <h3 class="fw-bold mb-1"><i class="fa-solid fa-user-plus me-2 text-primary"></i> Student Registration Form</h3>
+                            <p class="text-slate-300 small mb-0">Complete the details sections below to register your account. Academic history will be generated automatically based on your selected current semester.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <div id="registerAlert" class="alert alert-danger d-none mb-3" role="alert"></div>
+                    <div id="registerSuccess" class="alert alert-success d-none mb-3" role="alert"></div>
+
+                    <form id="studentRegisterForm">
+
+                        <!-- 1. PERSONAL DETAILS -->
+                        <div class="border-start border-4 border-primary ps-3 mb-4">
+                            <h5 class="fw-bold text-primary mb-1">1. Personal Details & Credentials</h5>
+                            <p class="text-muted small mb-0">Primary identification and account login details</p>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">University Seat Number (USN) <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="usn" placeholder="e.g. 1401CSE001" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" placeholder="Enter Student Full Name" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" placeholder="student@example.com" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" placeholder="e.g. 9876543210">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="password" placeholder="Create secure password" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="confirm_password" placeholder="Re-enter password" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Date of Birth</label>
+                                <input type="date" class="form-control" id="dob" value="2003-05-15">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Gender</label>
+                                <select class="form-select" id="gender">
+                                    <option value="Male" selected>Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Department <span class="text-danger">*</span></label>
+                                <select class="form-select" id="department">
+                                    <option value="CSE" selected>CSE</option>
+                                    <option value="ECE">ECE</option>
+                                    <option value="ISE">ISE</option>
+                                    <option value="EEE">EEE</option>
+                                    <option value="MECH">MECH</option>
+                                    <option value="CIVIL">CIVIL</option>
+                                    <option value="CSE (AI & ML)">CSE (AI & ML)</option>
+                                    <option value="CSE (DS)">CSE (DS)</option>
+                                    <option value="CSE (Cyber Security)">CSE (Cyber Security)</option>
+                                    <option value="AI&DS">AI&DS</option>
+                                    <option value="CSBS">CSBS</option>
+                                    <option value="MCA">MCA</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Section & Admission Year</label>
+                                <div class="input-group">
+                                    <select class="form-select" id="section">
+                                        <option value="A" selected>Sec A</option>
+                                        <option value="B">Sec B</option>
+                                        <option value="C">Sec C</option>
+                                    </select>
+                                    <input type="text" class="form-control" id="admission_year" value="2023" placeholder="Year">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. ACADEMIC BACKGROUND & AUTOMATIC ACADEMIC HISTORY -->
+                        <hr class="my-4">
+                        <div class="border-start border-4 border-warning ps-3 mb-4">
+                            <h5 class="fw-bold text-warning mb-1">2. Academic Background & Automatic Semester History</h5>
+                            <p class="text-muted small mb-0">Select your current semester. The system will automatically generate previous semester records for SGPA and backlog details.</p>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Current Semester <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg fw-bold text-primary" id="current_semester" onchange="renderSemesterHistoryCards()">
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                    <option value="6" selected>Semester 6</option>
+                                    <option value="7">Semester 7</option>
+                                    <option value="8">Semester 8</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">10th Percentage / CGPA (%)</label>
+                                <input type="number" min="0" max="100" class="form-control" id="tenth_percentage" value="85">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">12th / Diploma %</label>
+                                <input type="number" min="0" max="100" class="form-control" id="twelfth_percentage" value="82">
+                            </div>
+                        </div>
+
+                        <!-- DYNAMIC SEMESTER HISTORY CARDS -->
+                        <div class="card card-custom bg-light border-1 mb-4">
+                            <div class="card-header bg-transparent border-0 pt-3 px-3">
+                                <h6 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-graduation-cap text-primary me-2"></i> Previous Semester Records</h6>
+                                <p class="text-muted text-xs mb-0">Enter SGPA and backlog details for each generated semester. Overall CGPA and Backlog totals calculate automatically.</p>
+                            </div>
+                            <div class="card-body p-3">
+                                <div id="semestersContainer" class="row g-3">
+                                    <!-- Dynamically generated semester inputs -->
+                                </div>
+
+                                <!-- LIVE AUTOMATIC ACADEMIC HISTORY SUMMARY -->
+                                <div class="card bg-white border-primary shadow-sm mt-4">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-center justify-content-between mb-2 border-bottom pb-2">
+                                            <span class="fw-bold text-slate-800 text-sm"><i class="fa-solid fa-calculator text-primary me-2"></i> Live Calculated Academic Summary</span>
+                                            <span class="badge bg-primary-subtle text-primary fw-bold text-xs">Auto Calculated</span>
+                                        </div>
+                                        <div class="row g-3 text-center">
+                                            <div class="col-md-3">
+                                                <span class="text-muted text-xs fw-bold">Overall CGPA</span>
+                                                <h4 class="fw-bold text-primary mb-0" id="liveCGPA">7.50</h4>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <span class="text-muted text-xs fw-bold">Total Active Backlogs</span>
+                                                <h4 class="fw-bold text-danger mb-0" id="liveActiveBacklogs">0</h4>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <span class="text-muted text-xs fw-bold">Total Cleared Backlogs</span>
+                                                <h4 class="fw-bold text-success mb-0" id="liveClearedBacklogs">0</h4>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <span class="text-muted text-xs fw-bold">Total Backlog History</span>
+                                                <h4 class="fw-bold text-slate-800 mb-0" id="liveTotalBacklogs">0</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. FAMILY BACKGROUND -->
+                        <hr class="my-4">
+                        <div class="border-start border-4 border-info ps-3 mb-4">
+                            <h5 class="fw-bold text-info mb-1">3. Family Background</h5>
+                            <p class="text-muted small mb-0">Parental education and household demographics</p>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Father's Education</label>
+                                <input type="text" class="form-control" id="father_education" value="Graduate">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Father's Occupation</label>
+                                <input type="text" class="form-control" id="father_occupation" value="Private Service">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Mother's Education</label>
+                                <input type="text" class="form-control" id="mother_education" value="Graduate">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Mother's Occupation</label>
+                                <input type="text" class="form-control" id="mother_occupation" value="Homemaker">
+                            </div>
+                        </div>
+
+                        <!-- 4. HOME STUDY ENVIRONMENT -->
+                        <hr class="my-4">
+                        <div class="border-start border-4 border-secondary ps-3 mb-4">
+                            <h5 class="fw-bold text-secondary mb-1">4. Home Study Environment</h5>
+                            <p class="text-muted small mb-0">Study infrastructure and daily commute metrics</p>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Own Study Room</label>
+                                <select class="form-select" id="own_study_room">
+                                    <option value="Yes" selected>Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Internet at Home</label>
+                                <select class="form-select" id="internet">
+                                    <option value="Yes" selected>Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Own Laptop/Desktop</label>
+                                <select class="form-select" id="own_laptop">
+                                    <option value="Yes" selected>Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Smartphone Available</label>
+                                <select class="form-select" id="smartphone">
+                                    <option value="Yes" selected>Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Average Daily Study Hours</label>
+                                <input type="number" step="0.5" min="0" max="18" class="form-control" id="study_hours" value="4">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Daily Travel Time (Hours)</label>
+                                <input type="number" step="0.5" min="0" max="8" class="form-control" id="daily_travel_time" value="1">
+                            </div>
+                        </div>
+
+                        <!-- 5. TECHNOLOGY ACCESS & SKILLS -->
+                        <hr class="my-4">
+                        <div class="border-start border-4 border-success ps-3 mb-4">
+                            <h5 class="fw-bold text-success mb-1">5. Technology Access & Placement Profile</h5>
+                            <p class="text-muted small mb-0">Programming experience, project portfolio, and certifications</p>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Laptop Usage (Years)</label>
+                                <input type="number" step="0.5" min="0" max="10" class="form-control" id="laptop_years" value="2">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Programming Experience (Years)</label>
+                                <input type="number" step="0.5" min="0" max="10" class="form-control" id="programming_experience" value="1">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Programming Languages Known</label>
+                            <input type="text" class="form-control" id="prog_languages" value="Python, Java, C++" placeholder="e.g. Python, Java, SQL, C++">
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Academic Projects</label>
+                                <input type="number" min="0" max="20" class="form-control" id="academic_projects" value="2">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Personal Projects</label>
+                                <input type="number" min="0" max="20" class="form-control" id="personal_projects" value="1">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Internships Completed</label>
+                                <input type="number" min="0" max="10" class="form-control" id="internships_count" value="1">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Certifications</label>
+                                <input type="number" min="0" max="20" class="form-control" id="certifications_count" value="2">
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-top text-center">
+                            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow" id="btnSubmitRegister">
+                                <i class="fa-solid fa-user-check me-2"></i> Register Student Account (Submit for Teacher Approval)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        renderSemesterHistoryCards();
+    });
+
+    function renderSemesterHistoryCards() {
+        const currSem = parseInt(document.getElementById('current_semester').value) || 1;
+        const container = document.getElementById('semestersContainer');
+        container.innerHTML = '';
+
+        if (currSem <= 1) {
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-info border-0 mb-0 py-3 d-flex align-items-center">
+                        <i class="fa-solid fa-circle-info fs-4 me-3 text-info"></i>
+                        <div>
+                            <strong>Semester 1 Admission</strong>
+                            <p class="mb-0 text-xs text-muted">First semester student. No previous semester SGPA or backlog history required.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            recalculateSummary();
+            return;
+        }
+
+        for (let s = 1; s < currSem; s++) {
+            const defaultSgpa = (7.0 + (s * 0.15)).toFixed(2);
+            const card = document.createElement('div');
+            card.className = 'col-md-6 col-lg-4';
+            card.innerHTML = `
+                <div class="card card-custom border shadow-sm p-3 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="badge bg-primary text-white font-monospace">Semester ${s}</span>
+                        <span class="text-muted text-xs">SGPA & Backlogs</span>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label text-xs fw-semibold mb-1">Semester ${s} SGPA <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" min="0" max="10" class="form-control form-control-sm sem-sgpa" data-sem="${s}" value="${defaultSgpa}" required oninput="recalculateSummary()">
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label text-xs fw-semibold mb-1">Number of Backlogs</label>
+                        <input type="number" min="0" max="10" class="form-control form-control-sm sem-backlog-cnt" data-sem="${s}" value="0" min="0" onchange="renderBacklogItems(${s})">
+                    </div>
+
+                    <div id="backlogItemsSem_${s}" class="backlog-items-container">
+                        <!-- Dynamic backlog subject inputs -->
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        }
+        recalculateSummary();
+    }
+
+    function renderBacklogItems(semNum) {
+        const cntInput = document.querySelector(`.sem-backlog-cnt[data-sem="${semNum}"]`);
+        const cnt = parseInt(cntInput ? cntInput.value : 0) || 0;
+        const container = document.getElementById(`backlogItemsSem_${semNum}`);
+        if (!container) return;
+
+        container.innerHTML = '';
+        if (cnt > 0) {
+            for (let i = 1; i <= cnt; i++) {
+                const row = document.createElement('div');
+                row.className = 'bg-light p-2 rounded mb-2 border';
+                row.innerHTML = `
+                    <div class="mb-1">
+                        <input type="text" class="form-control form-control-sm bl-subject" data-sem="${semNum}" placeholder="Backlog ${i} Subject Name (e.g. M1)" required oninput="recalculateSummary()">
+                    </div>
+                    <div>
+                        <select class="form-select form-select-sm bl-status" data-sem="${semNum}" onchange="recalculateSummary()">
+                            <option value="Active" selected>Active Backlog</option>
+                            <option value="Cleared">Cleared Backlog</option>
+                        </select>
+                    </div>
+                `;
+                container.appendChild(row);
+            }
+        }
+        recalculateSummary();
+    }
+
+    function recalculateSummary() {
+        const sgpaInputs = document.querySelectorAll('.sem-sgpa');
+        let totalSgpa = 0.0;
+        let count = 0;
+
+        sgpaInputs.forEach(inp => {
+            const val = parseFloat(inp.value) || 0;
+            totalSgpa += val;
+            count++;
+        });
+
+        const overallCGPA = count > 0 ? (totalSgpa / count).toFixed(2) : '7.50';
+        document.getElementById('liveCGPA').textContent = overallCGPA;
+
+        let activeCnt = 0;
+        let clearedCnt = 0;
+
+        const statusSelects = document.querySelectorAll('.bl-status');
+        statusSelects.forEach(sel => {
+            if (sel.value === 'Active') activeCnt++;
+            else if (sel.value === 'Cleared') clearedCnt++;
+        });
+
+        document.getElementById('liveActiveBacklogs').textContent = activeCnt;
+        document.getElementById('liveClearedBacklogs').textContent = clearedCnt;
+        document.getElementById('liveTotalBacklogs').textContent = activeCnt + clearedCnt;
+    }
+
+    document.getElementById('studentRegisterForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const alertBox = document.getElementById('registerAlert');
+        const successBox = document.getElementById('registerSuccess');
+        alertBox.classList.add('d-none');
+        successBox.classList.add('d-none');
+
+        const currSem = parseInt(document.getElementById('current_semester').value) || 1;
+        const semestersData = [];
+
+        for (let s = 1; s < currSem; s++) {
+            const sgpaInp = document.querySelector(`.sem-sgpa[data-sem="${s}"]`);
+            const cntInp = document.querySelector(`.sem-backlog-cnt[data-sem="${s}"]`);
+            const sgpa = parseFloat(sgpaInp ? sgpaInp.value : 7.5);
+            const backlogCount = parseInt(cntInp ? cntInp.value : 0) || 0;
+
+            const backlogs = [];
+            const blSubjs = document.querySelectorAll(`.bl-subject[data-sem="${s}"]`);
+            const blStats = document.querySelectorAll(`.bl-status[data-sem="${s}"]`);
+
+            blSubjs.forEach((subjInp, idx) => {
+                const subjectName = subjInp.value.trim();
+                const status = blStats[idx] ? blStats[idx].value : 'Active';
+                if (subjectName) {
+                    backlogs.push({ subject_name: subjectName, status: status });
+                }
+            });
+
+            semestersData.push({
+                semester: s,
+                sgpa: sgpa,
+                backlog_count: backlogCount,
+                backlogs: backlogs
+            });
+        }
+
+        const btn = document.getElementById('btnSubmitRegister');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> Registering & Calculating Academic History...`;
+
+        const payload = {
+            usn: document.getElementById('usn').value,
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            password: document.getElementById('password').value,
+            confirm_password: document.getElementById('confirm_password').value,
+            dob: document.getElementById('dob').value,
+            gender: document.getElementById('gender').value,
+            department: document.getElementById('department').value,
+            section: document.getElementById('section').value,
+            admission_year: document.getElementById('admission_year').value,
+            current_semester: currSem,
+
+            tenth_percentage: document.getElementById('tenth_percentage').value,
+            twelfth_percentage: document.getElementById('twelfth_percentage').value,
+
+            father_education: document.getElementById('father_education').value,
+            father_occupation: document.getElementById('father_occupation').value,
+            mother_education: document.getElementById('mother_education').value,
+            mother_occupation: document.getElementById('mother_occupation').value,
+
+            own_study_room: document.getElementById('own_study_room').value,
+            internet: document.getElementById('internet').value,
+            own_laptop: document.getElementById('own_laptop').value,
+            smartphone: document.getElementById('smartphone').value,
+            study_hours: document.getElementById('study_hours').value,
+            daily_travel_time: document.getElementById('daily_travel_time').value,
+
+            laptop_years: document.getElementById('laptop_years').value,
+            programming_experience: document.getElementById('programming_experience').value,
+            prog_languages: document.getElementById('prog_languages').value,
+            academic_projects: document.getElementById('academic_projects').value,
+            personal_projects: document.getElementById('personal_projects').value,
+            internships_count: document.getElementById('internships_count').value,
+            certifications_count: document.getElementById('certifications_count').value,
+
+            semesters_data: semestersData
+        };
+
+        try {
+            const res = await fetch('/student/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                successBox.textContent = data.message || "Registration successful!";
+                successBox.classList.remove('d-none');
+                setTimeout(() => {
+                    window.location.href = data.redirect_url || '/student/login';
+                }, 2000);
+            } else {
+                alertBox.textContent = data.error || "Registration failed.";
+                alertBox.classList.remove('d-none');
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-user-check me-2"></i> Register Student Account (Submit for Teacher Approval)`;
+            }
+        } catch (err) {
+            alertBox.textContent = 'Server connection error: ' + err.message;
+            alertBox.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-user-check me-2"></i> Register Student Account (Submit for Teacher Approval)`;
+        }
+    });
+</script>
+{% endblock %}

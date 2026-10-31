@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Student Login — Student Performance Analyzer & Marks Prediction System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+
+            <div class="card card-custom shadow-lg border-0">
+                <div class="card-body p-4 text-center">
+                    <div class="auth-icon-box bg-primary-subtle text-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                        <i class="fa-solid fa-user-graduate fs-2"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">Student Login Portal</h3>
+                    <p class="text-muted small mb-4">Enter your registered USN or Email and Password to access your personal dashboard</p>
+
+                    <div id="loginAlert" class="alert alert-danger d-none text-start text-sm mb-3" role="alert"></div>
+
+                    <form id="studentLoginForm">
+                        <div class="form-floating mb-3 text-start">
+                            <input type="text" class="form-control" id="loginId" placeholder="USN or Email" required>
+                            <label for="loginId"><i class="fa-solid fa-id-card me-1"></i> USN or Registered Email</label>
+                        </div>
+
+                        <div class="form-floating mb-4 text-start">
+                            <input type="password" class="form-control" id="password" placeholder="Password" required>
+                            <label for="password"><i class="fa-solid fa-lock me-1"></i> Password</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm" id="btnLoginSubmit">
+                            <i class="fa-solid fa-right-to-bracket me-2"></i> Login to Student Dashboard
+                        </button>
+                    </form>
+
+                    <!-- Links below Student Login -->
+                    <div class="mt-4 pt-3 border-top d-flex justify-content-around text-muted small">
+                        <div>
+                            <a href="/student/register" class="fw-bold text-primary text-decoration-none">
+                                <i class="fa-solid fa-user-plus me-1"></i> New Student Registration
+                            </a>
+                        </div>
+                        <div class="vr"></div>
+                        <div>
+                            <a href="/teacher/login" class="fw-bold text-secondary text-decoration-none">
+                                <i class="fa-solid fa-chalkboard-user me-1"></i> Teacher Login
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.getElementById('studentLoginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const alertBox = document.getElementById('loginAlert');
+        alertBox.classList.add('d-none');
+
+        const btn = document.getElementById('btnLoginSubmit');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> Authenticating...`;
+
+        const login_id = document.getElementById('loginId').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const res = await fetch('/student/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login_id, password })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                window.location.href = data.redirect_url || '/student/dashboard';
+            } else {
+                alertBox.textContent = data.error || 'Invalid credentials';
+                alertBox.classList.remove('d-none');
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-right-to-bracket me-2"></i> Login to Student Dashboard`;
+            }
+        } catch (err) {
+            alertBox.textContent = 'Connection error during login: ' + err.message;
+            alertBox.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-right-to-bracket me-2"></i> Login to Student Dashboard`;
+        }
+    });
+</script>
+{% endblock %}

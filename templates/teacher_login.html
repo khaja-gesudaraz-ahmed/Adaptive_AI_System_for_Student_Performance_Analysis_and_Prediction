@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Login — Student Performance Analyzer & Marks Prediction System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+            <div class="card card-custom shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-body p-4 text-center">
+                    <div class="auth-icon-box bg-primary-subtle text-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                        <i class="fa-solid fa-chalkboard-user fs-2"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">Teacher Portal</h3>
+                    <p class="text-muted small mb-4">Enter credentials to access class analytics & student risk reports</p>
+
+                    <div id="loginAlert" class="alert alert-danger d-none" role="alert"></div>
+
+                    <form id="teacherLoginForm">
+                        <div class="form-floating mb-3 text-start">
+                            <input type="text" class="form-control" id="teacherEmail" placeholder="Teacher ID or Email" value="CSE6A01" required>
+                            <label for="teacherEmail"><i class="fa-solid fa-id-card me-1"></i> Teacher ID / Email Address</label>
+                        </div>
+                        <div class="form-floating mb-4 text-start">
+                            <input type="password" class="form-control" id="teacherPassword" placeholder="Password" value="Rns@123" required>
+                            <label for="teacherPassword"><i class="fa-solid fa-lock me-1"></i> Password</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm">
+                            <i class="fa-solid fa-right-to-bracket me-2"></i> Login to Dashboard
+                        </button>
+                    </form>
+
+                    <div class="mt-4 pt-3 border-top text-center text-muted small">
+                        <span>Default Demo Login: <code>CSE6A01</code> / <code>Rns@123</code></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.getElementById('teacherLoginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const login_id = document.getElementById('teacherEmail').value.trim();
+        const password = document.getElementById('teacherPassword').value;
+        const alertBox = document.getElementById('loginAlert');
+        
+        try {
+            const res = await fetch('/teacher/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login_id, password })
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.location.href = data.redirect || '/teacher/dashboard';
+            } else {
+                alertBox.textContent = data.error || 'Invalid credentials';
+                alertBox.classList.remove('d-none');
+            }
+        } catch (err) {
+            alertBox.textContent = 'Connection error during login';
+            alertBox.classList.remove('d-none');
+        }
+    });
+</script>
+{% endblock %}

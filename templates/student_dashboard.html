@@ -1,0 +1,596 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard — {{ student.name }} | Student Performance Analyzer & Marks Prediction System{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3" id="dashboardContainer" data-student-id="{{ student_id }}">
+
+    <!-- Header Banner: Welcome & Quick PDF Download -->
+    <div class="card card-custom bg-slate-900 text-white shadow-sm mb-4 border-0">
+        <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <span class="badge bg-primary-subtle text-primary mb-2 px-3 py-1 rounded-pill fw-bold">Ongoing Semester Evaluation</span>
+                <h2 class="fw-bold mb-1">Welcome, {{ student.name }}</h2>
+                <p class="mb-0 text-slate-300 small">
+                    <span class="me-3"><i class="fa-solid fa-graduation-cap me-1"></i> {{ student.department or 'CSE' }} | Current Semester: Sem {{ student.current_semester or student.semester or 6 }} (Sec {{ student.section or 'A' }})</span>
+                    <span><i class="fa-solid fa-id-card me-1"></i> USN: {{ student.usn or 'N/A' }}</span>
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <a href="/report/pdf/{{ student_id }}" class="btn btn-danger btn-lg rounded-pill shadow-sm" target="_blank">
+                    <i class="fa-solid fa-file-pdf me-2"></i> Download Academic Report (PDF)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Nav Tabs -->
+    <ul class="nav nav-pills mb-4 gap-2 border-bottom pb-3" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill px-4 py-2 fw-bold shadow-sm" id="perf-tab" data-bs-toggle="pill" data-bs-target="#tab-performance" type="button" role="tab">
+                <i class="fa-solid fa-chart-line me-2"></i>📊 Performance & Analytics
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4 py-2 fw-bold shadow-sm position-relative" id="doubts-tab" data-bs-toggle="pill" data-bs-target="#tab-doubts" type="button" role="tab">
+                <i class="fa-solid fa-comments me-2 text-primary"></i>💬 Doubt Discussion
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4 py-2 fw-bold shadow-sm position-relative" id="teacher-chat-tab" data-bs-toggle="pill" data-bs-target="#tab-teacher-chat" type="button" role="tab" onclick="loadStudentConversations()">
+                <i class="fa-solid fa-user-graduate me-2 text-success"></i>💬 Ask Class Teacher
+                <span class="badge bg-danger rounded-pill ms-2 d-none" id="studentUnreadBadge">0</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="dashboardTabContent">
+        <!-- TAB 1: ACADEMIC PERFORMANCE & ANALYTICS -->
+        <div class="tab-pane fade show active" id="tab-performance" role="tabpanel">
+
+    <!-- 5 TOP SUMMARY CARDS -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Student ID (USN) -->
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-primary shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Student ID (USN)</span>
+                <h5 class="fw-bold text-primary mb-0 text-truncate" id="cardUsn">{{ student.usn or 'N/A' }}</h5>
+            </div>
+        </div>
+
+        <!-- 2. Current Semester -->
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-info shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Current Semester</span>
+                <h3 class="fw-bold text-slate-800 mb-0">Sem {{ student.current_semester or student.semester or 6 }}</h3>
+            </div>
+        </div>
+
+        <!-- 3. Overall CGPA -->
+        <div class="col-md-4 col-lg-3">
+            <div class="card card-custom border-start border-4 border-success shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Overall CGPA</span>
+                <h3 class="fw-bold text-success mb-0" id="cardCgpa">{{ student.cgpa or 7.5 }} / 10.0</h3>
+            </div>
+        </div>
+
+        <!-- 4. Attendance Percentage -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card card-custom border-start border-4 border-secondary shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Attendance Percentage</span>
+                <h3 class="fw-bold text-slate-800 mb-0" id="cardAttendance">{{ student.attendance or 78 }}%</h3>
+            </div>
+        </div>
+
+        <!-- 5. Current Active Backlogs -->
+        <div class="col-md-6 col-lg-2">
+            <div class="card card-custom border-start border-4 border-danger shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Active Backlogs</span>
+                <h3 class="fw-bold text-danger mb-0" id="cardActiveBacklogs">{{ student.active_backlogs or 0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD CONTENT GRID -->
+    <div class="row g-4 mb-4">
+
+        <!-- LEFT COLUMN: IA Performance Table & Academic Progress Trend -->
+        <div class="col-lg-8">
+
+            <!-- CURRENT SEMESTER PERFORMANCE (INTERNAL ASSESSMENT IA TABLE) -->
+            <div class="card card-custom shadow-sm border-0 mb-4">
+                <div class="card-header bg-slate-900 text-white p-3 border-0 rounded-top-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="fa-solid fa-file-pen text-primary me-2"></i> Current Semester Internal Assessment (IA) Progress</h5>
+                    <span class="badge bg-primary-subtle text-primary fw-bold text-xs">Ongoing Semester</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 text-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Subject Code</th>
+                                    <th>Subject Name</th>
+                                    <th class="text-center">IA-1</th>
+                                    <th class="text-center">IA-2</th>
+                                    <th class="text-center">IA-3</th>
+                                    <th class="text-center fw-bold text-primary">Best Two IA Average</th>
+                                    <th class="text-center">Attendance (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subjectPerformanceTable">
+                                <tr><td colspan="7" class="text-center py-3 text-muted">Loading internal assessment progress...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACADEMIC PROGRESS & SGPA TREND CHART -->
+            <div class="card card-custom shadow-sm border-0 mb-4">
+                <div class="card-header bg-transparent border-0 pt-3 px-3">
+                    <h5 class="fw-bold mb-0"><i class="fa-solid fa-chart-line text-info me-2"></i> Academic Progress &amp; Semester SGPA Trend</h5>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row g-3 mb-3 text-center">
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted text-xs font-monospace text-uppercase fw-bold">Latest SGPA</span>
+                            <h4 class="fw-bold text-info mb-0" id="progSgpa">7.80</h4>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted text-xs font-monospace text-uppercase fw-bold">Overall CGPA</span>
+                            <h4 class="fw-bold text-success mb-0" id="progCgpa">{{ student.cgpa or 7.8 }}</h4>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted text-xs font-monospace text-uppercase fw-bold">Active Backlogs</span>
+                            <h4 class="fw-bold text-danger mb-0" id="progActive">{{ student.active_backlogs or 0 }}</h4>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <span class="text-muted text-xs font-monospace text-uppercase fw-bold">Cleared Backlogs</span>
+                            <h4 class="fw-bold text-primary mb-0" id="progCleared">{{ student.cleared_backlogs or 0 }}</h4>
+                        </div>
+                    </div>
+                    <div style="height: 220px;">
+                        <canvas id="studentSgpaTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRAPH 1: INTERNAL ASSESSMENT PERFORMANCE (Bar Chart) -->
+            <div class="card card-custom shadow-sm border-0 mb-4">
+                <div class="card-header bg-slate-900 text-white p-3 border-0 rounded-top-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="fa-solid fa-chart-bar text-success me-2"></i> Internal Assessment Performance</h5>
+                    <span class="badge bg-success-subtle text-success fw-bold text-xs">Live DB Data &bull; Each IA out of 50</span>
+                </div>
+                <div class="card-body p-3">
+                    <div id="iaChartNoData" class="text-center text-muted py-4 d-none">
+                        <i class="fa-solid fa-circle-info me-2"></i>
+                        IA marks not yet entered by the teacher. Charts will appear once marks are uploaded.
+                    </div>
+                    <div style="height: 280px;">
+                        <canvas id="iaPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRAPH 2: SUBJECT-WISE PERFORMANCE (Horizontal Bar) -->
+            <div class="card card-custom shadow-sm border-0 mb-4">
+                <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="fa-solid fa-ranking-star text-primary me-2"></i> Subject-wise Performance</h5>
+                    <span class="badge bg-primary-subtle text-primary fw-bold text-xs">Best Two IA Average &bull; Out of 50</span>
+                </div>
+                <div class="card-body p-3">
+                    <div id="subjectPerfNoData" class="text-center text-muted py-4 d-none">
+                        <i class="fa-solid fa-circle-info me-2"></i>
+                        No IA marks available yet. Subject performance chart will populate after teacher enters marks.
+                    </div>
+                    <div style="height: 220px;">
+                        <canvas id="subjectPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERSONALIZED WEEKLY STUDY PLAN -->
+            <div class="card card-custom shadow-sm border-0 mb-4">
+                <div class="card-header bg-slate-900 text-white p-3 border-0 rounded-top-4">
+                    <h5 class="fw-bold mb-0"><i class="fa-solid fa-calendar-week text-success me-2"></i> Personalized Weekly Study Plan</h5>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row g-3" id="studyPlanGrid">
+                        <!-- Monday to Sunday schedule rendered dynamically -->
+                        <div class="col-12 text-center py-3 text-muted">Generating personalized timetable...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Teacher Remarks, Notifications, Placement & SHAP -->
+        <div class="col-lg-4">
+
+            <!-- TEACHER'S REMARKS -->
+            <div class="card card-custom border-start border-4 border-warning shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 pt-3 px-3">
+                    <h6 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-comment-dots text-warning me-2"></i> Teacher's Official Remarks</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div class="bg-light p-3 rounded-3 border">
+                        <p class="mb-0 text-sm fst-italic" id="teacherRemarksText">
+                            "{{ student.teacher_remarks or 'Improve your attendance and spend more time on DBMS and Computer Networks.' }}"
+                        </p>
+                    </div>
+                    <span class="text-xs text-muted mt-2 d-block"><i class="fa-solid fa-user-tie me-1"></i> Class Coordinator / Faculty Advisor</span>
+                </div>
+            </div>
+
+            <!-- RECENT ACADEMIC NOTIFICATIONS -->
+            <div class="card card-custom shadow-sm mb-4 border-0">
+                <div class="card-header bg-slate-900 text-white p-3 border-0 rounded-top-4">
+                    <h6 class="fw-bold mb-0"><i class="fa-solid fa-bell text-warning me-2"></i> Academic Updates & Notifications</h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush text-sm" id="notificationsList">
+                        <li class="list-group-item py-3">Loading recent notifications...</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- ACADEMIC RANKING & PERFORMANCE STANDING -->
+            <div class="card card-custom shadow-sm mb-4 border-0 border-start border-4 border-primary">
+                <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-trophy text-warning me-2"></i> Academic Performance Ranking</h6>
+                    <span class="badge bg-primary-subtle text-primary fw-bold" id="rankChangeBadge">New</span>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row g-2 text-center mb-3">
+                        <div class="col-4">
+                            <div class="bg-light p-2 rounded border">
+                                <span class="text-muted text-xs d-block">College Rank</span>
+                                <h4 class="fw-bold text-primary mb-0" id="cardCollegeRank">#—</h4>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-light p-2 rounded border">
+                                <span class="text-muted text-xs d-block">Dept Rank</span>
+                                <h4 class="fw-bold text-info mb-0" id="cardDeptRank">#—</h4>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-light p-2 rounded border">
+                                <span class="text-muted text-xs d-block">Class Rank</span>
+                                <h4 class="fw-bold text-success mb-0" id="cardClassRank">#—</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-xs text-muted fw-bold text-uppercase">Overall Ranking Score</span>
+                        <span class="fw-bold text-slate-800" id="cardRankingScore">0.0 / 100</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-primary" id="cardRankingScoreBar" role="progressbar" style="width: 0%"></div>
+                    </div>
+
+                    <!-- Ranking Factor Breakdown Accordion -->
+                    <div class="accordion accordion-flush" id="rankingFactorAccordion">
+                        <div class="accordion-item border-0">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed p-2 text-xs fw-bold text-muted bg-light rounded" type="button" data-bs-toggle="collapse" data-bs-target="#factorCollapse">
+                                    <i class="fa-solid fa-chart-pie text-primary me-2"></i> View 6-Factor Weighted Breakdown
+                                </button>
+                            </h2>
+                            <div id="factorCollapse" class="accordion-collapse collapse">
+                                <div class="accordion-body p-2 text-xs">
+                                    <div class="d-flex justify-content-between py-1 border-bottom"><span>CGPA (30%):</span> <strong id="fCgpaScore">—</strong></div>
+                                    <div class="d-flex justify-content-between py-1 border-bottom"><span>Past SGPA History (25%):</span> <strong id="fPastScore">—</strong></div>
+                                    <div class="d-flex justify-content-between py-1 border-bottom"><span>IA Performance (15%):</span> <strong id="fIaScore">—</strong></div>
+                                    <div class="d-flex justify-content-between py-1 border-bottom"><span>Attendance (10%):</span> <strong id="fAttScore">—</strong></div>
+                                    <div class="d-flex justify-content-between py-1 border-bottom"><span>Consistency (10%):</span> <strong id="fConstScore">—</strong></div>
+                                    <div class="d-flex justify-content-between py-1"><span>Improvement (10%):</span> <strong id="fImpScore">—</strong></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PLACEMENT READINESS INDEX CARD -->
+            <div class="card card-custom shadow-sm mb-4 border-0 border-start border-4 border-success">
+                <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-briefcase text-success me-2"></i> Placement Readiness Index</h6>
+                    <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill" id="placementCategoryBadge">Placement Ready</span>
+                </div>
+                <div class="card-body p-3">
+                    <div class="text-center mb-3">
+                        <h2 class="fw-bold text-success mb-0" id="placementScoreVal">0%</h2>
+                        <span class="text-xs text-muted" id="placementTierVal">Tier 1 (Product & Tech Giants)</span>
+                    </div>
+
+                    <!-- Factor Contribution Progress Bars -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between text-xs mb-1"><span>Programming (30%)</span><strong id="pProgScore">0</strong></div>
+                        <div class="progress mb-2" style="height: 5px;"><div class="progress-bar bg-info" id="pProgBar" style="width: 0%"></div></div>
+
+                        <div class="d-flex justify-content-between text-xs mb-1"><span>Academic CGPA (20%)</span><strong id="pCgpaScore">0</strong></div>
+                        <div class="progress mb-2" style="height: 5px;"><div class="progress-bar bg-success" id="pCgpaBar" style="width: 0%"></div></div>
+
+                        <div class="d-flex justify-content-between text-xs mb-1"><span>Projects &amp; GitHub (20%)</span><strong id="pProjScore">0</strong></div>
+                        <div class="progress mb-2" style="height: 5px;"><div class="progress-bar bg-primary" id="pProjBar" style="width: 0%"></div></div>
+
+                        <div class="d-flex justify-content-between text-xs mb-1"><span>Communication (10%)</span><strong id="pCommScore">0</strong></div>
+                        <div class="progress mb-2" style="height: 5px;"><div class="progress-bar bg-warning" id="pCommBar" style="width: 0%"></div></div>
+
+                        <div class="d-flex justify-content-between text-xs mb-1"><span>Internships (10%)</span><strong id="pInternScore">0</strong></div>
+                        <div class="progress mb-2" style="height: 5px;"><div class="progress-bar bg-secondary" id="pInternBar" style="width: 0%"></div></div>
+
+                        <div class="d-flex justify-content-between text-xs mb-1"><span>Attendance (10%)</span><strong id="pAttScore">0</strong></div>
+                        <div class="progress mb-3" style="height: 5px;"><div class="progress-bar bg-dark" id="pAttBar" style="width: 0%"></div></div>
+                    </div>
+
+                    <!-- Strengths & Weak Areas -->
+                    <div class="mb-3">
+                        <div class="text-xs fw-bold text-success mb-1"><i class="fa-solid fa-circle-check me-1"></i> Key Strengths:</div>
+                        <div id="placementStrengths" class="d-flex flex-wrap gap-1 mb-2">
+                            <span class="badge bg-success-subtle text-success text-xs">Loading...</span>
+                        </div>
+
+                        <div class="text-xs fw-bold text-danger mb-1"><i class="fa-solid fa-triangle-exclamation me-1"></i> Weak Areas to Improve:</div>
+                        <div id="placementWeakAreas" class="d-flex flex-wrap gap-1 mb-2">
+                            <span class="badge bg-danger-subtle text-danger text-xs">Loading...</span>
+                        </div>
+                    </div>
+
+                    <!-- Target Companies -->
+                    <div class="text-start text-xs text-muted border-top pt-2 mb-2">
+                        <span>Target Companies: <strong id="placementTargetCompanies" class="text-slate-800">Google, Microsoft, Amazon, Infosys</strong></span>
+                    </div>
+
+                    <!-- Recommendations List -->
+                    <div class="bg-light p-2 rounded border">
+                        <span class="text-xs fw-bold text-primary d-block mb-1"><i class="fa-solid fa-lightbulb me-1"></i> Action Recommendations:</span>
+                        <ul class="text-xs mb-0 ps-3 text-muted" id="placementRecommendations">
+                            <li>Keep practicing DSA and mock interviews</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+        </div> <!-- END TAB 1 -->
+
+        <!-- TAB 2: STUDENT DOUBT DISCUSSION COMMUNITY -->
+        <div class="tab-pane fade" id="tab-doubts" role="tabpanel">
+
+            <!-- HEADER BANNER & ACTION ROW -->
+            <div class="card card-custom bg-slate-900 text-white shadow-sm mb-4 border-0">
+                <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <span class="badge bg-primary-subtle text-primary mb-2 px-3 py-1 rounded-pill fw-bold">Peer Learning &amp; Q&amp;A</span>
+                        <h3 class="fw-bold mb-1"><i class="fa-solid fa-comments text-primary me-2"></i>💬 Student Doubt Discussion</h3>
+                        <p class="mb-0 text-slate-300 small">
+                            Ask questions, help fellow peers, share code snippets, and solve academic doubts together.
+                        </p>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary btn-lg rounded-pill shadow-sm px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#askDoubtModal">
+                            <i class="fa-solid fa-circle-plus me-2"></i>+ Ask a Doubt
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEARCH & FILTER BAR -->
+            <div class="card card-custom shadow-sm mb-4 border-0">
+                <div class="card-body p-3">
+                    <div class="row g-3 align-items-center">
+
+                        <!-- Search Box -->
+                        <div class="col-md-5">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                <input type="text" id="doubtSearchInput" class="form-control bg-light border-start-0" placeholder="🔍 Search questions by title, code, keywords...">
+                            </div>
+                        </div>
+
+                        <!-- Subject Filter Dropdown -->
+                        <div class="col-md-3">
+                            <select id="doubtSubjectFilter" class="form-select bg-light">
+                                <option value="All">All Subjects</option>
+                                <option value="DBMS">DBMS</option>
+                                <option value="Java">Java</option>
+                                <option value="Python">Python</option>
+                                <option value="Data Structures">Data Structures</option>
+                                <option value="Computer Networks">Computer Networks</option>
+                                <option value="Operating Systems">Operating Systems</option>
+                                <option value="Software Engineering">Software Engineering</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Status Filter Pills -->
+                        <div class="col-md-4">
+                            <div class="btn-group w-100 flex-wrap" role="group" id="doubtStatusPills">
+                                <button type="button" class="btn btn-outline-primary btn-sm active" data-filter="All">All</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-filter="Unanswered">Unanswered</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-filter="Answered">Answered</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-filter="Solved">Solved</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-filter="My Doubts">My Doubts</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- DOUBTS FEED GRID -->
+            <div id="doubtsFeed" class="row g-3 mb-4">
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary me-2" role="status"></div>
+                    <span class="text-muted fw-bold">Loading student doubts...</span>
+                </div>
+            </div>
+        </div> <!-- END TAB 2 -->
+
+        <!-- TAB 3: TEACHER-STUDENT PRIVATE COMMUNICATION -->
+        <div class="tab-pane fade" id="tab-teacher-chat" role="tabpanel">
+            <div class="row g-4">
+                <!-- LEFT COLUMN: Conversation List & New Question Button -->
+                <div class="col-lg-4">
+                    <div class="card card-custom shadow-sm border-0 mb-4">
+                        <div class="card-header bg-slate-900 text-white p-3 border-0 rounded-top-4 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="fw-bold mb-0"><i class="fa-solid fa-comments text-primary me-2"></i>My Conversations</h6>
+                                <small class="text-slate-300">Class Teacher: <strong id="assignedTeacherName">Loading...</strong></small>
+                            </div>
+                            <button class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#newConversationModal">
+                                <i class="fa-solid fa-plus me-1"></i> New Question
+                            </button>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="list-group list-group-flush" id="studentConversationList" style="max-height: 550px; overflow-y: auto;">
+                                <div class="text-center py-4 text-muted">
+                                    <i class="fa-solid fa-spinner fa-spin fa-2x mb-2"></i>
+                                    <p class="mb-0">Loading conversations...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: Selected Conversation View / Messages Thread -->
+                <div class="col-lg-8">
+                    <div class="card card-custom shadow-sm border-0" id="conversationDetailCard">
+                        <div class="card-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2" id="convDetailHeader">
+                            <div>
+                                <h5 class="fw-bold mb-1 text-slate-800" id="convDetailTopic">Select a conversation</h5>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-secondary" id="convDetailCategory">-</span>
+                                    <span class="badge bg-info-subtle text-info" id="convDetailStatus">-</span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2" id="convActionButtons" style="display: none;">
+                                <button class="btn btn-sm btn-outline-success rounded-pill" id="btnResolveConv" onclick="resolveCurrentConversation()">
+                                    <i class="fa-solid fa-check me-1"></i> Mark as Resolved
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning rounded-pill d-none" id="btnReopenConv" onclick="reopenCurrentConversation()">
+                                    <i class="fa-solid fa-rotate-left me-1"></i> Reopen Question
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Academic Context Card (if present) -->
+                        <div class="card-body bg-light border-bottom p-3 d-none" id="convAcademicContextBanner">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <i class="fa-solid fa-circle-info text-primary"></i>
+                                <strong class="text-slate-800 text-sm">Academic Context Snapshot (Read-Only)</strong>
+                            </div>
+                            <div class="row g-2 text-xs text-muted" id="convAcademicContextFields">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Messages Thread Body -->
+                        <div class="card-body p-4" id="convMessagesBody" style="height: 380px; overflow-y: auto;">
+                            <div class="text-center text-muted py-5">
+                                <i class="fa-solid fa-comments fa-3x mb-3 text-slate-300"></i>
+                                <p>Select a conversation from the left to view messages and teacher replies.</p>
+                            </div>
+                        </div>
+
+                        <!-- Reply Input Footer -->
+                        <div class="card-footer bg-white p-3 border-top d-none" id="convReplyFooter">
+                            <form id="studentReplyForm" onsubmit="submitStudentReply(event)">
+                                <div class="input-group">
+                                    <textarea class="form-control" id="studentReplyInput" rows="2" placeholder="Type your reply to your Class Teacher..." required></textarea>
+                                    <button class="btn btn-primary px-4" type="submit" id="btnSendStudentReply">
+                                        <i class="fa-solid fa-paper-plane me-1"></i> Send Reply
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- END TAB CONTENT -->
+
+</div>
+
+<!-- NEW CONVERSATION MODAL FOR STUDENT -->
+<div class="modal fade" id="newConversationModal" tabindex="-1" aria-labelledby="newConversationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-slate-900 text-white">
+                <h5 class="modal-title fw-bold" id="newConversationModalLabel"><i class="fa-solid fa-paper-plane text-primary me-2"></i>Ask Class Teacher</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="newConversationForm" onsubmit="submitNewConversation(event)">
+                <div class="modal-body p-4">
+                    <div class="alert alert-info py-2 px-3 small mb-3">
+                        <i class="fa-solid fa-shield-halved me-1"></i> Private academic clarification with your assigned Class Teacher. Marks and attendance cannot be edited via chat.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-sm">Category <span class="text-danger">*</span></label>
+                        <select class="form-select" id="newConvCategory" required onchange="handleCategoryChange(this.value)">
+                            <option value="">-- Select Academic Category --</option>
+                            <option value="IA Marks">IA Marks</option>
+                            <option value="Subject Marks">Subject Marks</option>
+                            <option value="Attendance">Attendance</option>
+                            <option value="CGPA / Academic Performance">CGPA / Academic Performance</option>
+                            <option value="Risk Level">Risk Level</option>
+                            <option value="Performance Prediction">Performance Prediction</option>
+                            <option value="Placement Readiness">Placement Readiness</option>
+                            <option value="Teacher Remark">Teacher Remark</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3 d-none" id="subjectSelectionGroup">
+                        <label class="form-label fw-bold text-sm">Select Subject</label>
+                        <select class="form-select" id="newConvSubject" onchange="updateContextPreview()">
+                            <option value="DBMS">DBMS (Subject 1)</option>
+                            <option value="Java">Java (Subject 2)</option>
+                            <option value="CN">Computer Networks (Subject 3)</option>
+                            <option value="SE">Software Engineering (Subject 4)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-sm">Topic <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="newConvTopic" placeholder="e.g., Attendance clarification for DBMS" required maxlength="255">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-sm">Message / Question <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="newConvMessage" rows="4" placeholder="Explain your question or doubt in detail..." required></textarea>
+                    </div>
+
+                    <!-- Read-Only Academic Context Preview -->
+                    <div class="card bg-light border p-3 rounded-3" id="autoContextPreview">
+                        <h6 class="fw-bold text-xs text-uppercase text-muted mb-2"><i class="fa-solid fa-paperclip me-1"></i>Auto-attached Academic Context</h6>
+                        <div id="autoContextFields" class="small text-slate-700">
+                            <em>Category context will be attached automatically based on your current records.</em>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold" id="btnSubmitNewConv">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endblock %}
+

@@ -1,0 +1,1009 @@
+{% extends "base.html" %}
+
+{% block title %}Class Teacher Portal — {{ teacher_dept }} Sem {{ teacher_sem }} | Student Performance Analyzer & Marks Prediction System{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+
+    <!-- Teacher Banner -->
+    <div class="card card-custom bg-slate-900 text-white shadow-sm mb-4 border-0">
+        <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <span class="badge bg-primary-subtle text-primary px-3 py-1 rounded-pill fw-bold text-uppercase mb-2">Class Coordinator Portal</span>
+                <h2 class="fw-bold mb-1">Class Teacher Management Console</h2>
+                <p class="mb-0 text-slate-300 small">
+                    <i class="fa-solid fa-user-tie me-1"></i> Faculty: <strong>{{ teacher_name }}</strong> |
+                    <i class="fa-solid fa-graduation-cap ms-2 me-1"></i> Assigned Scope: <strong>{{ teacher_dept }} Department (Sem {{ teacher_sem }})</strong>
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-success rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#excelMarkModal">
+                    <i class="fa-solid fa-file-excel me-2"></i> Structured Excel IA Mark Entry
+                </button>
+                <a href="/teacher/attendance" class="btn btn-info text-white rounded-pill px-4 shadow-sm">
+                    <i class="fa-solid fa-clipboard-user me-2"></i> Attendance Management
+                </a>
+                <a href="/report/class-pdf?department={{ teacher_dept }}&semester={{ teacher_sem }}&section=All" class="btn btn-danger rounded-pill px-3 shadow-sm" target="_blank">
+                    <i class="fa-solid fa-file-pdf me-2"></i> Class PDF Report
+                </a>
+                <a href="/teacher/logout" class="btn btn-outline-light rounded-pill px-3"><i class="fa-solid fa-right-from-bracket me-1"></i> Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6 SUMMARY METRIC CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-primary shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Total Students</span>
+                <h3 class="fw-bold text-slate-800 mb-0" id="tTotalStudents">0</h3>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-success shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Class Avg CGPA</span>
+                <h3 class="fw-bold text-success mb-0" id="tAvgCgpa">0.0</h3>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-info shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Avg Attendance</span>
+                <h3 class="fw-bold text-info mb-0" id="tAvgAttendance">0%</h3>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-primary shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Passed</span>
+                <h3 class="fw-bold text-primary mb-0" id="tPassCount">0</h3>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-warning shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Failed</span>
+                <h3 class="fw-bold text-warning mb-0" id="tFailCount">0</h3>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-danger shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">High Risk</span>
+                <h3 class="fw-bold text-danger mb-0" id="tHighRisk">0</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENDING APPROVAL QUEUE & CLASS ROSTER -->
+    <div class="row g-4 mb-4">
+
+        <!-- PENDING REGISTRATION APPROVAL QUEUE -->
+        <div class="col-lg-12 mb-2">
+            <div class="card card-custom shadow-sm border-0 border-start border-4 border-warning">
+                <div class="card-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-user-clock text-warning me-2"></i> Pending Student Admission Approvals ({{ teacher_dept }} Department — Sem {{ teacher_sem }})</h5>
+                    <span class="badge bg-warning-subtle text-warning fw-bold" id="pendingCountBadge">0 Pending</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 text-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>USN</th>
+                                    <th>Student Name</th>
+                                    <th>Email</th>
+                                    <th>Dept & Sem</th>
+                                    <th>10th / 12th %</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingStudentsTable">
+                                <tr><td colspan="7" class="text-center py-3 text-muted">Checking pending approvals...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION FILTER & IA MARKS VIEW FOR ALL SECTIONS -->
+        <!-- SECTION FILTER & IA MARKS VIEW FOR ALL SECTIONS + STUDENT MESSAGES -->
+        <div class="col-lg-12">
+            <div class="card card-custom shadow-sm border-0">
+                <div class="card-header bg-white p-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <ul class="nav nav-pills gap-2" id="teacherMainTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active rounded-pill px-4 fw-bold shadow-sm" id="roster-tab" data-bs-toggle="pill" data-bs-target="#tab-teacher-roster" type="button" role="tab">
+                                <i class="fa-solid fa-users me-2 text-primary"></i>Class Roster &amp; IA Marks
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link rounded-pill px-4 fw-bold shadow-sm position-relative" id="messages-tab" data-bs-toggle="pill" data-bs-target="#tab-teacher-messages" type="button" role="tab" onclick="loadTeacherConversations()">
+                                <i class="fa-solid fa-comments me-2 text-success"></i>💬 Student Messages
+                                <span class="badge bg-danger rounded-pill ms-2 d-none" id="teacherUnreadBadge">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link rounded-pill px-4 fw-bold shadow-sm" id="subjects-tab" data-bs-toggle="pill" data-bs-target="#tab-teacher-subjects" type="button" role="tab" onclick="loadTeacherSubjects()">
+                                <i class="fa-solid fa-book me-2 text-warning"></i>Current Subjects
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- SECTION FILTER BUTTONS -->
+                    <div class="btn-group btn-group-sm" id="sectionFilterBtns" role="group">
+                        <button type="button" class="btn btn-outline-primary active" onclick="filterTeacherSection('All', this)">All Sections</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="filterTeacherSection('A', this)">Section A</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="filterTeacherSection('B', this)">Section B</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="filterTeacherSection('C', this)">Section C</button>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="tab-content" id="teacherMainTabContent">
+                        <!-- TAB 1: CLASS ROSTER & IA MARKS -->
+                        <div class="tab-pane fade show active" id="tab-teacher-roster" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 text-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>USN</th>
+                                            <th>Student Name</th>
+                                            <th class="text-center">Section</th>
+                                            <th class="text-center">Subject 1 (DBMS)<br><small class="text-muted fw-normal">Best Avg &bull; (IA 1|2|3)</small></th>
+                                            <th class="text-center">Subject 2 (Java)<br><small class="text-muted fw-normal">Best Avg &bull; (IA 1|2|3)</small></th>
+                                            <th class="text-center">Subject 3 (CN)<br><small class="text-muted fw-normal">Best Avg &bull; (IA 1|2|3)</small></th>
+                                            <th class="text-center">Subject 4 (SE)<br><small class="text-muted fw-normal">Best Avg &bull; (IA 1|2|3)</small></th>
+                                            <th class="text-center">Ranking Score</th>
+                                            <th class="text-center">Placement Readiness</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="classStudentsTable">
+                                        <tr><td colspan="11" class="text-center py-4 text-muted">Loading IA marks roster...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: STUDENT MESSAGES & PRIVATE ACADEMIC DISCUSSION -->
+                        <div class="tab-pane fade p-3" id="tab-teacher-messages" role="tabpanel">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-3 border-bottom">
+                                <div class="d-flex align-items-center gap-2">
+                                    <h5 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-comments text-primary me-2"></i>Student Messages</h5>
+                                    <span class="badge bg-danger rounded-pill d-none" id="teacherHeaderUnreadBadge">🔴 0 New</span>
+                                </div>
+                                <!-- STATUS FILTER PILLS -->
+                                <div class="btn-group btn-group-sm" id="msgStatusFilterBtns" role="group">
+                                    <button type="button" class="btn btn-outline-secondary active" onclick="filterTeacherMessages('All', this)">All</button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="filterTeacherMessages('Unread', this)">Unread</button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="filterTeacherMessages('Open', this)">Open</button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="filterTeacherMessages('Resolved', this)">Resolved</button>
+                                </div>
+                            </div>
+
+                            <div class="row g-4">
+                                <!-- LEFT SIDE: Conversation List -->
+                                <div class="col-lg-5">
+                                    <div class="list-group list-group-flush border rounded-3" id="teacherConversationList" style="max-height: 550px; overflow-y: auto;">
+                                        <div class="text-center py-4 text-muted">
+                                            <i class="fa-solid fa-spinner fa-spin fa-2x mb-2"></i>
+                                            <p class="mb-0">Loading student messages...</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- RIGHT SIDE: Selected Conversation Details & Replies -->
+                                <div class="col-lg-7">
+                                    <div class="card border shadow-none" id="tConvDetailCard">
+                                        <!-- Student Information Header -->
+                                        <div class="card-header bg-slate-900 text-white p-3 d-flex justify-content-between align-items-center flex-wrap gap-2" id="tConvStudentHeader">
+                                            <div>
+                                                <span class="badge bg-primary-subtle text-primary mb-1" id="tConvStudentUsn">USN</span>
+                                                <h6 class="fw-bold mb-0" id="tConvStudentName">Select a student conversation</h6>
+                                                <small class="text-slate-300" id="tConvStudentMeta">Dept & Sem</small>
+                                            </div>
+                                            <div id="tConvHeaderActions" class="d-none">
+                                                <button class="btn btn-sm btn-success rounded-pill" onclick="resolveTeacherConversation()">
+                                                    <i class="fa-solid fa-check me-1"></i> Mark Resolved
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Category & Topic Info -->
+                                        <div class="card-body bg-light border-bottom p-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="badge bg-secondary" id="tConvCategory">Category</span>
+                                                <span class="badge bg-info-subtle text-info" id="tConvStatus">Status</span>
+                                            </div>
+                                            <h6 class="fw-bold text-slate-800 mb-2" id="tConvTopic">Topic</h6>
+                                            
+                                            <!-- Academic Context Summary Card -->
+                                            <div class="bg-white border rounded p-2 text-xs text-muted d-none" id="tConvAcademicContext">
+                                                <!-- Dynamically populated student current academic context (Attendance, Marks, Risk, etc.) -->
+                                            </div>
+                                        </div>
+
+                                        <!-- Message Thread Body -->
+                                        <div class="card-body p-3" id="tConvMessagesBody" style="height: 320px; overflow-y: auto;">
+                                            <div class="text-center text-muted py-5">
+                                                <i class="fa-solid fa-envelope-open-text fa-3x mb-3 text-slate-300"></i>
+                                                <p>Select a message thread from the left to open conversation and reply.</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Teacher Reply Input -->
+                                        <div class="card-footer bg-white p-3 border-top d-none" id="tConvReplyFooter">
+                                            <form id="teacherReplyForm" onsubmit="submitTeacherReply(event)">
+                                                <div class="input-group">
+                                                    <textarea class="form-control" id="teacherReplyInput" rows="2" placeholder="Type reply to student..." required></textarea>
+                                                    <button class="btn btn-primary px-4 fw-bold" type="submit" id="btnSendTeacherReply">
+                                                        <i class="fa-solid fa-paper-plane me-1"></i> Reply
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 3: SUBJECT MANAGEMENT -->
+                        <div class="tab-pane fade p-3" id="tab-teacher-subjects" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-book text-warning me-2"></i>Current Class Subjects</h5>
+                                    <small class="text-muted" id="subjectScopeLabel">Manage subjects for your assigned class scope. Subject ID = Permanent Identity.</small>
+                                </div>
+                                <button class="btn btn-primary btn-sm rounded-pill px-3 fw-bold" onclick="openAddSubjectModal()">
+                                    <i class="fa-solid fa-plus me-1"></i> Add Subject
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 text-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 120px;">Permanent ID</th>
+                                            <th>Subject Name (Editable Display Name)</th>
+                                            <th class="text-center" style="width: 120px;">Display Order</th>
+                                            <th class="text-center" style="width: 100px;">Status</th>
+                                            <th class="text-end" style="width: 180px;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="currentSubjectsTable">
+                                        <tr><td colspan="5" class="text-center py-4 text-muted">Loading class subjects...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PLACEMENT DETAIL MODAL FOR TEACHER -->
+        <div class="modal fade" id="teacherPlacementModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header bg-slate-900 text-white border-0">
+                        <h5 class="modal-title fw-bold"><i class="fa-solid fa-briefcase text-success me-2"></i> Placement Readiness Details</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4" id="teacherPlacementModalBody">
+                        <div class="text-center py-3 text-muted">Loading placement details...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADD SUBJECT MODAL -->
+        <div class="modal fade" id="addSubjectModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header bg-primary text-white border-0">
+                        <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus-circle me-2"></i>Add New Subject</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Subject Name</label>
+                            <input type="text" class="form-control" id="newSubjectName" placeholder="e.g. Artificial Intelligence" required maxlength="100">
+                            <div class="form-text">A new permanent Subject ID will be assigned automatically.</div>
+                        </div>
+                        <div class="alert alert-danger d-none" id="addSubjectAlert"></div>
+                        <button type="button" class="btn btn-primary w-100 rounded-pill fw-bold" onclick="submitAddSubject()">
+                            <i class="fa-solid fa-save me-1"></i> Save New Subject
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EDIT SUBJECT MODAL -->
+        <div class="modal fade" id="editSubjectModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header bg-warning text-dark border-0">
+                        <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Subject Name</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <input type="hidden" id="editSubjectId">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Subject ID (Permanent Identity)</label>
+                            <input type="text" class="form-control bg-light font-monospace" id="editSubjectPermanentId" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Editable Subject Name</label>
+                            <input type="text" class="form-control" id="editSubjectName" required maxlength="100">
+                            <div class="form-text text-muted"><i class="fa-solid fa-info-circle me-1"></i>Renaming updates display name everywhere. All existing IA marks stay attached to the Subject ID.</div>
+                        </div>
+                        <div class="alert alert-danger d-none" id="editSubjectAlert"></div>
+                        <button type="button" class="btn btn-warning w-100 rounded-pill fw-bold" onclick="submitEditSubject()">
+                            <i class="fa-solid fa-check me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEACHER REMARKS PANEL -->
+        <div class="col-lg-12 mt-3">
+            <div class="card card-custom shadow-sm border-0 border-start border-4 border-warning">
+                <div class="card-header bg-white p-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-comment-dots text-warning me-2"></i> Send Teacher Remark to Student</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div id="remarkAlertBox" class="d-none mb-3"></div>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-xs text-uppercase font-monospace">Select Student (USN)</label>
+                            <select class="form-select" id="remarkStudentSelect">
+                                <option value="">— Loading students —</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-xs text-uppercase font-monospace">Predefined Remark</label>
+                            <select class="form-select" id="remarkPredefinedSelect" onchange="applyPredefinedRemark()">
+                                <option value="">— Select predefined remark —</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-xs text-uppercase font-monospace">Custom / Edit Remark</label>
+                            <textarea class="form-control" id="remarkTextarea" rows="2" placeholder="Type or edit remark here..."></textarea>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-warning w-100 fw-bold rounded-pill" onclick="sendTeacherRemark()">
+                                <i class="fa-solid fa-paper-plane me-1"></i> Send Remark
+                            </button>
+                        </div>
+                    </div>
+                    <div id="currentRemarkDisplay" class="mt-3 d-none">
+                        <small class="text-muted">Current remark on file: </small>
+                        <span class="fst-italic text-slate-700" id="currentRemarkText"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- EXCEL MARK ENTRY WORKFLOW MODAL -->
+<div class="modal fade" id="excelMarkModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-slate-900 text-white border-0">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-file-excel text-success me-2"></i> Structured Excel IA Mark Entry Workflow</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                
+                <!-- STEP 1: Select Section & IA Test -->
+                <div class="card card-custom bg-light p-3 border mb-4">
+                    <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-1 me-1"></i> Step 1: Select Section & IA Test to Generate Template</h6>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label text-xs text-uppercase font-monospace fw-bold">Section</label>
+                            <select class="form-select" id="templateSecSelect">
+                                <option value="A" selected>Section A</option>
+                                <option value="B">Section B</option>
+                                <option value="C">Section C</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-xs text-uppercase font-monospace fw-bold">Internal Assessment Test</label>
+                            <select class="form-select" id="iaTestSelect">
+                                <option value="IA-1" selected>IA-1 (Test 1)</option>
+                                <option value="IA-2">IA-2 (Test 2)</option>
+                                <option value="IA-3">IA-3 (Test 3)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-primary w-100 rounded-pill" onclick="downloadExcelTemplate()">
+                                <i class="fa-solid fa-download me-2"></i> Generate Excel Template
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Upload Completed Template -->
+                <div class="card card-custom bg-light p-3 border">
+                    <h6 class="fw-bold text-success mb-2"><i class="fa-solid fa-2 me-1"></i> Step 2: Upload Completed Excel Template</h6>
+                    <form id="uploadExcelForm">
+                        <div class="mb-3">
+                            <label class="form-label text-xs text-uppercase font-monospace fw-bold">Select Filled Excel (.xlsx) File</label>
+                            <input type="file" class="form-control" id="excelFileInput" accept=".xlsx, .xls" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold" id="uploadExcelBtn">
+                            <i class="fa-solid fa-cloud-arrow-up me-2"></i> Validate & Upload IA Marks
+                        </button>
+                    </form>
+                </div>
+
+                <!-- UPLOAD RESULT CARD CONTAINER -->
+                <div id="uploadResultCard" class="mt-4 d-none"></div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTeacherSecFilter = 'All';
+
+async function loadTeacherDashboard() {
+    try {
+        const res = await fetch(`/teacher/api/analytics?section=${currentTeacherSecFilter}`);
+        const data = await res.json();
+        if (!data.success) return;
+
+        document.getElementById('tTotalStudents').textContent = data.cards.total_students;
+        document.getElementById('tAvgCgpa').textContent = data.cards.avg_cgpa;
+        document.getElementById('tAvgAttendance').textContent = `${data.cards.avg_attendance}%`;
+        document.getElementById('tPassCount').textContent = data.cards.pass_count;
+        document.getElementById('tFailCount').textContent = data.cards.fail_count;
+        document.getElementById('tHighRisk').textContent = data.cards.high_risk_count;
+
+        // Render Dynamic Table Header
+        const thead = document.querySelector('#tab-teacher-roster table thead tr');
+        const classSubs = data.class_subjects || [];
+        if (thead && classSubs.length > 0) {
+            let headerHtml = `
+                <th>Rank</th>
+                <th>USN</th>
+                <th>Student Name</th>
+                <th class="text-center">Section</th>
+            `;
+            classSubs.forEach(sub => {
+                headerHtml += `<th class="text-center">${escapeHtml(sub.subject_name)}<br><small class="text-muted fw-normal">Best Avg &bull; (IA 1|2|3)</small></th>`;
+            });
+            headerHtml += `
+                <th class="text-center">Ranking Score</th>
+                <th class="text-center">Placement Readiness</th>
+                <th class="text-end">Actions</th>
+            `;
+            thead.innerHTML = headerHtml;
+        }
+
+        const tbody = document.getElementById('classStudentsTable');
+        const colSpan = 6 + (classSubs.length || 4);
+        if (!data.students || data.students.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${colSpan}" class="text-center py-4 text-muted">No students registered in this section scope yet.</td></tr>`;
+        } else {
+            tbody.innerHTML = '';
+            data.students.forEach(s => {
+                const tr = document.createElement('tr');
+                const fmtIa = v => (v === null || v === undefined || v === '-' || v === '—') ? '<span class="text-muted">—</span>' : `<strong>${v}</strong>`;
+
+                let rcBadge = '<span class="badge bg-secondary-subtle text-secondary">New</span>';
+                if (String(s.rank_change).startsWith('+')) {
+                    rcBadge = `<span class="badge bg-success-subtle text-success fw-bold"><i class="fa-solid fa-arrow-up me-1"></i>${s.rank_change}</span>`;
+                } else if (String(s.rank_change).startsWith('-')) {
+                    rcBadge = `<span class="badge bg-danger-subtle text-danger fw-bold"><i class="fa-solid fa-arrow-down me-1"></i>${s.rank_change}</span>`;
+                }
+
+                let pCatBadge = 'bg-secondary';
+                if (s.placement_category === 'Highly Ready') pCatBadge = 'bg-success';
+                else if (s.placement_category === 'Placement Ready') pCatBadge = 'bg-primary';
+                else if (s.placement_category === 'Needs Improvement') pCatBadge = 'bg-warning text-dark';
+                else if (s.placement_category === 'Not Ready') pCatBadge = 'bg-danger';
+
+                let subColsHtml = '';
+                const sSubs = s.dynamic_subjects || [];
+                if (sSubs.length > 0) {
+                    sSubs.forEach(sub => {
+                        subColsHtml += `
+                            <td class="text-center">
+                                <div class="fw-bold text-primary fs-6">${fmtIa(sub.best_avg)}</div>
+                                <div class="text-xs text-muted font-monospace">${fmtIa(sub.ia1)} | ${fmtIa(sub.ia2)} | ${fmtIa(sub.ia3)}</div>
+                            </td>
+                        `;
+                    });
+                } else {
+                    subColsHtml = `
+                        <td class="text-center"><div class="fw-bold text-primary fs-6">${fmtIa(s.s1_best_avg)}</div><div class="text-xs text-muted font-monospace">${fmtIa(s.s1_ia1)} | ${fmtIa(s.s1_ia2)} | ${fmtIa(s.s1_ia3)}</div></td>
+                        <td class="text-center"><div class="fw-bold text-primary fs-6">${fmtIa(s.s2_best_avg)}</div><div class="text-xs text-muted font-monospace">${fmtIa(s.s2_ia1)} | ${fmtIa(s.s2_ia2)} | ${fmtIa(s.s2_ia3)}</div></td>
+                        <td class="text-center"><div class="fw-bold text-primary fs-6">${fmtIa(s.s3_best_avg)}</div><div class="text-xs text-muted font-monospace">${fmtIa(s.s3_ia1)} | ${fmtIa(s.s3_ia2)} | ${fmtIa(s.s3_ia3)}</div></td>
+                        <td class="text-center"><div class="fw-bold text-primary fs-6">${fmtIa(s.s4_best_avg)}</div><div class="text-xs text-muted font-monospace">${fmtIa(s.s4_ia1)} | ${fmtIa(s.s4_ia2)} | ${fmtIa(s.s4_ia3)}</div></td>
+                    `;
+                }
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="fw-bold text-slate-800">#${s.class_rank || '—'}</div>
+                        <div class="text-xs text-muted">Dept #${s.department_rank || '—'} ${rcBadge}</div>
+                    </td>
+                    <td class="fw-bold font-monospace text-primary">${s.usn || 'N/A'}</td>
+                    <td class="fw-semibold">${s.name}</td>
+                    <td class="text-center"><span class="badge bg-secondary-subtle text-secondary fw-bold">Sec ${s.section || 'A'}</span></td>
+                    ${subColsHtml}
+                    <td class="text-center">
+                        <span class="badge bg-primary-subtle text-primary fw-bold fs-6">${s.ranking_score ?? '0.0'}</span>
+                    </td>
+                    <td class="text-center">
+                        <div class="fw-bold text-success">${s.placement_score ?? 0}%</div>
+                        <span class="badge ${pCatBadge} text-xs">${s.placement_category || 'N/A'}</span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <button class="btn btn-sm btn-outline-success rounded-pill me-1" onclick="viewTeacherPlacementDetails(${s.id}, '${s.name}', '${s.usn}')">
+                            <i class="fa-solid fa-briefcase"></i> Placement
+                        </button>
+                        <a href="/report/pdf/${s.id}" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill"><i class="fa-solid fa-file-pdf"></i> PDF</a>
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill ms-1" onclick="deleteTeacherStudent(${Number(s.id)}, '${escapeHtml(s.name || 'this student')}', '${escapeHtml(s.usn || '')}')" title="Delete student from your assigned class">
+                            <i class="fa-solid fa-trash-can"></i> Delete
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Load Pending Approval Queue
+        const pendingRes = await fetch('/teacher/api/pending-students');
+        const pendingData = await pendingRes.json();
+        const pendingTbody = document.getElementById('pendingStudentsTable');
+
+        if (pendingData.success && pendingData.students) {
+            document.getElementById('pendingCountBadge').textContent = `${pendingData.students.length} Pending`;
+            if (pendingData.students.length === 0) {
+                pendingTbody.innerHTML = `<tr><td colspan="7" class="text-center py-3 text-muted">No pending admission registrations for {{ teacher_dept }}.</td></tr>`;
+            } else {
+                pendingTbody.innerHTML = '';
+                pendingData.students.forEach(s => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="fw-bold font-monospace text-primary">${s.usn || 'N/A'}</td>
+                        <td class="fw-semibold">${s.name}</td>
+                        <td>${s.email}</td>
+                        <td>${s.department} Sem ${s.current_semester || 6}</td>
+                        <td>${s.tenth_percentage}% / ${s.twelfth_percentage}%</td>
+                        <td><span class="badge bg-warning text-dark">Pending Approval</span></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-success me-1 rounded-pill" onclick="approveStudent(${s.id})"><i class="fa-solid fa-check me-1"></i> Approve</button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="rejectStudent(${s.id})"><i class="fa-solid fa-times me-1"></i> Reject</button>
+                        </td>
+                    `;
+                    pendingTbody.appendChild(tr);
+                });
+            }
+        }
+    } catch (err) {
+        console.error('Error loading teacher dashboard:', err);
+    }
+}
+
+function filterTeacherSection(sec, btn) {
+    currentTeacherSecFilter = sec;
+    document.querySelectorAll('#sectionFilterBtns .btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadTeacherDashboard();
+}
+
+async function approveStudent(id) {
+    const res = await fetch(`/teacher/api/approve-student/${id}`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+        alert(data.message);
+        loadTeacherDashboard();
+    }
+}
+
+async function rejectStudent(id) {
+    const res = await fetch(`/teacher/api/reject-student/${id}`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+        alert(data.message);
+        loadTeacherDashboard();
+    }
+}
+
+function downloadExcelTemplate() {
+    const sec = document.getElementById('templateSecSelect').value;
+    const iaTest = document.getElementById('iaTestSelect').value;
+    window.location.href = `/teacher/api/export-mark-template?section=${encodeURIComponent(sec)}&ia_test=${encodeURIComponent(iaTest)}`;
+}
+
+async function loadTeacherSubjects() {
+    try {
+        const res = await fetch('/teacher/api/subjects');
+        const data = await res.json();
+        const tbody = document.getElementById('currentSubjectsTable');
+        if (!tbody) return;
+
+        if (!data.success || !data.subjects || data.subjects.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No subjects found for this class scope. Click "+ Add Subject" to create one.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        data.subjects.forEach((sub, idx) => {
+            const tr = document.createElement('tr');
+            const statusBadge = sub.active === 1 ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-secondary-subtle text-secondary">Inactive</span>';
+            tr.innerHTML = `
+                <td><span class="badge bg-dark font-monospace fs-6">Sub ${idx + 1}</span> <small class="text-muted ms-1">(#${sub.id})</small></td>
+                <td class="fw-bold text-slate-800">${escapeHtml(sub.subject_name)}</td>
+                <td class="text-center"><span class="badge bg-light text-dark font-monospace">${sub.display_order}</span></td>
+                <td class="text-center">${statusBadge}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-warning rounded-pill me-1" onclick="openEditSubjectModal(${sub.id}, '${escapeHtml(sub.subject_name)}')">
+                        <i class="fa-solid fa-pen-to-square me-1"></i> Edit Name
+                    </button>
+                    ${sub.active === 1 ? `<button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deactivateSubject(${sub.id}, '${escapeHtml(sub.subject_name)}')"><i class="fa-solid fa-ban me-1"></i> Deactivate</button>` : ''}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error('Failed to load subjects:', err);
+    }
+}
+
+function openAddSubjectModal() {
+    document.getElementById('newSubjectName').value = '';
+    const alert = document.getElementById('addSubjectAlert');
+    if (alert) alert.classList.add('d-none');
+    const modalEl = document.getElementById('addSubjectModal');
+    if (modalEl) new bootstrap.Modal(modalEl).show();
+}
+
+async function submitAddSubject() {
+    const name = document.getElementById('newSubjectName').value.trim();
+    const alert = document.getElementById('addSubjectAlert');
+    if (!name) {
+        if (alert) { alert.textContent = 'Subject name cannot be empty.'; alert.classList.remove('d-none'); }
+        return;
+    }
+
+    try {
+        const res = await fetch('/teacher/api/subjects/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subject_name: name })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const modalEl = document.getElementById('addSubjectModal');
+            if (modalEl) bootstrap.Modal.getInstance(modalEl).hide();
+            loadTeacherSubjects();
+            loadTeacherDashboard();
+        } else {
+            if (alert) { alert.textContent = data.error || 'Failed to add subject.'; alert.classList.remove('d-none'); }
+        }
+    } catch (err) {
+        if (alert) { alert.textContent = 'Error: ' + err.message; alert.classList.remove('d-none'); }
+    }
+}
+
+function openEditSubjectModal(subId, subName) {
+    document.getElementById('editSubjectId').value = subId;
+    document.getElementById('editSubjectPermanentId').value = `Subject ID: ${subId}`;
+    document.getElementById('editSubjectName').value = subName;
+    const alert = document.getElementById('editSubjectAlert');
+    if (alert) alert.classList.add('d-none');
+    const modalEl = document.getElementById('editSubjectModal');
+    if (modalEl) new bootstrap.Modal(modalEl).show();
+}
+
+async function submitEditSubject() {
+    const subId = document.getElementById('editSubjectId').value;
+    const newName = document.getElementById('editSubjectName').value.trim();
+    const alert = document.getElementById('editSubjectAlert');
+
+    if (!newName) {
+        if (alert) { alert.textContent = 'Subject name cannot be empty.'; alert.classList.remove('d-none'); }
+        return;
+    }
+
+    try {
+        const res = await fetch('/teacher/api/subjects/edit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subject_id: subId, subject_name: newName })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const modalEl = document.getElementById('editSubjectModal');
+            if (modalEl) bootstrap.Modal.getInstance(modalEl).hide();
+            loadTeacherSubjects();
+            loadTeacherDashboard();
+        } else {
+            if (alert) { alert.textContent = data.error || 'Failed to update subject.'; alert.classList.remove('d-none'); }
+        }
+    } catch (err) {
+        if (alert) { alert.textContent = 'Error: ' + err.message; alert.classList.remove('d-none'); }
+    }
+}
+
+async function deactivateSubject(subId, subName) {
+    if (!confirm(`Are you sure you want to deactivate subject '${subName}'? Historical IA marks will be preserved.`)) return;
+
+    try {
+        const res = await fetch('/teacher/api/subjects/deactivate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subject_id: subId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            loadTeacherSubjects();
+            loadTeacherDashboard();
+        } else {
+            alert(data.error || 'Deactivation failed.');
+        }
+    } catch (err) {
+        alert('Server error: ' + err.message);
+    }
+}
+
+document.getElementById('uploadExcelForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fileInput = document.getElementById('excelFileInput');
+    const iaTest = document.getElementById('iaTestSelect').value;
+    const btn = document.getElementById('uploadExcelBtn');
+    const resultCard = document.getElementById('uploadResultCard');
+
+    if (!fileInput.files[0]) return;
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('ia_test', iaTest);
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Validating & Processing Excel...';
+
+    try {
+        const res = await fetch('/teacher/api/upload-excel', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+
+        resultCard.classList.remove('d-none');
+
+        if (data.success && data.summary) {
+            const s = data.summary;
+            resultCard.innerHTML = `
+                <div class="card card-custom border-start border-4 border-success p-3 shadow-sm bg-success-subtle">
+                    <h6 class="fw-bold text-success mb-2"><i class="fa-solid fa-circle-check me-2"></i> Upload Successful</h6>
+                    <div class="row text-sm g-2">
+                        <div class="col-6"><strong>Department:</strong> ${s.department}</div>
+                        <div class="col-6"><strong>Semester &amp; Sec:</strong> Sem ${s.semester} (Sec ${s.section})</div>
+                        <div class="col-6"><strong>IA Test:</strong> ${s.ia_test}</div>
+                        <div class="col-6"><strong>Students Updated:</strong> <span class="badge bg-success">${s.students_updated}</span></div>
+                        <div class="col-6"><strong>Updated By:</strong> ${s.updated_by}</div>
+                        <div class="col-6"><strong>Updated On:</strong> ${s.updated_on}</div>
+                    </div>
+                    ${s.warnings && s.warnings.length > 0 ? `<div class="mt-2 text-xs text-warning"><strong>Warnings:</strong><ul class="mb-0 ps-3">${s.warnings.map(w => `<li>${w}</li>`).join('')}</ul></div>` : ''}
+                </div>
+            `;
+            loadTeacherDashboard();
+        } else {
+            const errorList = (data.details || [data.error || 'Upload validation failed.']).map(e => `<li>${e}</li>`).join('');
+            resultCard.innerHTML = `
+                <div class="card card-custom border-start border-4 border-danger p-3 shadow-sm bg-danger-subtle text-danger">
+                    <h6 class="fw-bold mb-2"><i class="fa-solid fa-triangle-exclamation me-2"></i> Validation Failed</h6>
+                    <ul class="mb-0 text-xs ps-3">
+                        ${errorList}
+                    </ul>
+                </div>
+            `;
+        }
+    } catch (err) {
+        alert('Server error uploading Excel file.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up me-2"></i> Validate & Upload IA Marks';
+    }
+});
+
+// ── TEACHER REMARKS ─────────────────────────────────────────────────────────
+
+async function loadRemarkStudents() {
+    try {
+        const res = await fetch('/teacher/api/students-for-remark');
+        const data = await res.json();
+        if (!data.success) return;
+
+        const studentSel = document.getElementById('remarkStudentSelect');
+        studentSel.innerHTML = '<option value="">— Select student —</option>';
+        (data.students || []).forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.usn;
+            opt.textContent = `${s.usn} — ${s.name} (Sec ${s.section || 'A'})`;
+            opt.dataset.remark = s.teacher_remarks || '';
+            studentSel.appendChild(opt);
+        });
+
+        // Show current remark when student selected
+        studentSel.addEventListener('change', () => {
+            const opt = studentSel.selectedOptions[0];
+            const cur = opt ? opt.dataset.remark : '';
+            const box = document.getElementById('currentRemarkDisplay');
+            if (cur) {
+                document.getElementById('currentRemarkText').textContent = `"${cur}"`;
+                box.classList.remove('d-none');
+            } else {
+                box.classList.add('d-none');
+            }
+        });
+
+        const predSel = document.getElementById('remarkPredefinedSelect');
+        predSel.innerHTML = '<option value="">— Select predefined remark —</option>';
+        (data.predefined_remarks || []).forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r;
+            opt.textContent = r;
+            predSel.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('Error loading remark students:', e);
+    }
+}
+
+function applyPredefinedRemark() {
+    const val = document.getElementById('remarkPredefinedSelect').value;
+    if (val) document.getElementById('remarkTextarea').value = val;
+}
+
+async function sendTeacherRemark() {
+    const usn    = document.getElementById('remarkStudentSelect').value.trim();
+    const remark = document.getElementById('remarkTextarea').value.trim();
+    const box    = document.getElementById('remarkAlertBox');
+
+    if (!usn) {
+        box.className = 'alert alert-warning d-block';
+        box.textContent = 'Please select a student first.';
+        return;
+    }
+    if (!remark) {
+        box.className = 'alert alert-warning d-block';
+        box.textContent = 'Please enter or select a remark before sending.';
+        return;
+    }
+
+    try {
+        const res = await fetch('/teacher/api/send-remark', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usn, remark })
+        });
+        const data = await res.json();
+        if (data.success) {
+            box.className = 'alert alert-success d-block';
+            box.innerHTML = `<i class="fa-solid fa-circle-check me-2"></i> ${data.message}`;
+            // Update the current remark display
+            document.getElementById('currentRemarkText').textContent = `"${remark}"`;
+            document.getElementById('currentRemarkDisplay').classList.remove('d-none');
+            // Update the option's data-remark too
+            const opt = document.querySelector(`#remarkStudentSelect option[value="${usn}"]`);
+            if (opt) opt.dataset.remark = remark;
+            setTimeout(() => box.className = 'd-none', 5000);
+        } else {
+            box.className = 'alert alert-danger d-block';
+            box.textContent = data.error || 'Failed to send remark.';
+        }
+    } catch (err) {
+        box.className = 'alert alert-danger d-block';
+        box.textContent = 'Server error: ' + err.message;
+    }
+}
+
+async function deleteTeacherStudent(studentId, studentName, usn) {
+    const label = usn ? `${studentName} (${usn})` : studentName;
+    if (!confirm(`Permanently delete ${label} from your assigned class? This action cannot be undone.`)) return;
+    try {
+        const response = await fetch(`/teacher/api/delete-student/${studentId}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            alert(data.error || 'Unable to delete this student.');
+            return;
+        }
+        alert(data.message || 'Student deleted successfully.');
+        if (typeof loadTeacherAnalytics === 'function') await loadTeacherAnalytics();
+        else window.location.reload();
+    } catch (error) {
+        console.error('Student deletion failed:', error);
+        alert('Could not connect to the server. The deletion status could not be confirmed.');
+    }
+}
+
+async function viewTeacherPlacementDetails(studentId, name, usn) {
+    const modalBody = document.getElementById('teacherPlacementModalBody');
+    modalBody.innerHTML = '<div class="text-center py-4"><i class="fa-solid fa-spinner fa-spin fa-2x text-primary"></i><p class="mt-2 text-muted">Loading placement diagnostic data...</p></div>';
+    new bootstrap.Modal(document.getElementById('teacherPlacementModal')).show();
+
+    try {
+        const res = await fetch(`/student/${studentId}/placement`);
+        const data = await res.json();
+        if (!data.success || !data.placement) {
+            modalBody.innerHTML = '<div class="alert alert-danger">Failed to load placement profile.</div>';
+            return;
+        }
+
+        const p = data.placement;
+        const b = p.breakdown || {};
+        const strengthsList = (p.strengths && p.strengths.length > 0) ? p.strengths.map(s => `<span class="badge bg-success-subtle text-success me-1 mb-1"><i class="fa-solid fa-check me-1"></i>${s}</span>`).join('') : '<span class="text-muted text-xs">None</span>';
+        const weakList = (p.weak_areas && p.weak_areas.length > 0) ? p.weak_areas.map(w => `<span class="badge bg-danger-subtle text-danger me-1 mb-1"><i class="fa-solid fa-exclamation me-1"></i>${w}</span>`).join('') : '<span class="badge bg-success-subtle text-success text-xs">No critical gaps</span>';
+        const recList = (p.recommendations && p.recommendations.length > 0) ? p.recommendations.map(r => `<li class="mb-1">${r}</li>`).join('') : '<li>Profile in good standing.</li>';
+        const companies = (p.recommended_companies || []).join(', ') || 'TCS, Infosys, Wipro';
+
+        modalBody.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                <div>
+                    <h5 class="fw-bold mb-0 text-slate-800">${name}</h5>
+                    <span class="text-xs text-muted font-monospace">${usn}</span>
+                </div>
+                <div class="text-end">
+                    <h3 class="fw-bold text-success mb-0">${p.readiness_score}%</h3>
+                    <span class="badge bg-success-subtle text-success">${p.category}</span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <span class="text-xs text-muted fw-bold text-uppercase d-block mb-1">Factor Contributions (0-100 Scale):</span>
+                <div class="row g-2 text-xs">
+                    <div class="col-6"><span class="text-muted">Programming (30%):</span> <strong class="text-primary">${b.programming ?? 0}</strong></div>
+                    <div class="col-6"><span class="text-muted">CGPA (20%):</span> <strong class="text-success">${b.cgpa ?? 0}</strong></div>
+                    <div class="col-6"><span class="text-muted">Projects (20%):</span> <strong class="text-info">${b.projects ?? 0}</strong></div>
+                    <div class="col-6"><span class="text-muted">Communication (10%):</span> <strong class="text-warning">${b.communication ?? 0}</strong></div>
+                    <div class="col-6"><span class="text-muted">Internships (10%):</span> <strong class="text-secondary">${b.internship ?? 0}</strong></div>
+                    <div class="col-6"><span class="text-muted">Attendance (10%):</span> <strong class="text-dark">${b.attendance ?? 0}</strong></div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <span class="text-xs text-muted fw-bold text-uppercase d-block mb-1">Key Strengths:</span>
+                <div>${strengthsList}</div>
+            </div>
+
+            <div class="mb-3">
+                <span class="text-xs text-muted fw-bold text-uppercase d-block mb-1">Weak Areas to Target:</span>
+                <div>${weakList}</div>
+            </div>
+
+            <div class="mb-3">
+                <span class="text-xs text-muted fw-bold text-uppercase d-block mb-1">Recommended Companies (${p.tier}):</span>
+                <div class="p-2 bg-light rounded text-xs fw-semibold text-slate-800">${companies}</div>
+            </div>
+
+            <div class="bg-light p-3 rounded-3 border">
+                <span class="text-xs fw-bold text-primary d-block mb-1"><i class="fa-solid fa-lightbulb me-1"></i> Faculty Advisory Recommendations:</span>
+                <ul class="text-xs mb-0 ps-3 text-muted">${recList}</ul>
+            </div>
+        `;
+    } catch (err) {
+        modalBody.innerHTML = '<div class="alert alert-danger">Error fetching placement details.</div>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadTeacherDashboard();
+    loadRemarkStudents();
+    if (typeof loadTeacherConversations === 'function') {
+        loadTeacherConversations();
+    }
+});
+</script>
+<script src="{{ url_for('static', filename='js/teacher.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}All Student Records — Student Performance Analyzer & Marks Prediction System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="card card-custom shadow-sm border-0">
+        <div class="card-header bg-slate-900 text-white p-4 border-0 rounded-top-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <h3 class="fw-bold mb-0"><i class="fa-solid fa-database text-primary me-2"></i> All Student Records</h3>
+            </div>
+            <div>
+                <a href="/student/new" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="fa-solid fa-plus me-1"></i> Add New Student
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Student Name</th>
+                            <th>Dept</th>
+                            <th>Semester</th>
+                            <th>Attendance</th>
+                            <th>Subject 1</th>
+                            <th>Subject 2</th>
+                            <th>Result</th>
+                            <th>Risk Level</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allRecordsTableBody">
+                        <tr><td colspan="10" class="text-center py-4 text-muted">Loading student records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', loadAllRecords);
+
+    async function loadAllRecords() {
+        try {
+            const res = await fetch('/records');
+            const records = await res.json();
+            const tbody = document.getElementById('allRecordsTableBody');
+            tbody.innerHTML = '';
+
+            if (!records || records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-4 text-muted">No student records found in database. <a href="/student/new">Add a student here</a>.</td></tr>`;
+                return;
+            }
+
+            records.forEach(r => {
+                const tr = document.createElement('tr');
+                const resBadge = r.result === 'Pass' ? 'bg-success' : 'bg-danger';
+                const riskBadge = r.risk === 'High' ? 'bg-danger' : (r.risk === 'Medium' ? 'bg-warning text-dark' : 'bg-success');
+
+                tr.innerHTML = `
+                    <td>#${r.id}</td>
+                    <td class="fw-semibold">${r.name}</td>
+                    <td>${r.department || 'CSE'}</td>
+                    <td>Sem ${r.semester || 5}</td>
+                    <td>${r.attendance}%</td>
+                    <td>${r.dbms_marks}</td>
+                    <td>${r.java_marks}</td>
+                    <td><span class="badge ${resBadge}">${r.result}</span></td>
+                    <td><span class="badge ${riskBadge}">${r.risk}</span></td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <a href="/student/${r.id}/dashboard" class="btn btn-primary btn-sm rounded-pill px-3" title="View Dashboard">
+                                <i class="fa-solid fa-chart-line me-1"></i> Dashboard
+                            </a>
+                            <a href="/report/pdf/${r.id}" class="btn btn-outline-danger btn-sm rounded-circle" title="Download PDF" target="_blank">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </a>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (err) {
+            console.error('Failed to load records:', err);
+        }
+    }
+</script>
+{% endblock %}

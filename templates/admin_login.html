@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login | Student Performance Analyzer & Marks Prediction System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+
+            <div class="card card-custom shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-slate-900 text-white text-center py-4 border-0">
+                    <span class="badge bg-danger-subtle text-danger px-3 py-1 rounded-pill fw-bold text-uppercase mb-2">College Administration</span>
+                    <h4 class="fw-bold mb-0"><i class="fa-solid fa-user-shield text-danger me-2"></i> Admin Login</h4>
+                </div>
+
+                <div class="card-body p-4">
+                    <div id="loginAlert" class="alert alert-danger d-none" role="alert"></div>
+
+                    <form id="adminLoginForm">
+                        <div class="mb-3">
+                            <label for="adminLoginId" class="form-label text-xs text-uppercase font-monospace fw-bold text-slate-700">Admin Login ID / Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-id-card text-muted"></i></span>
+                                <input type="text" class="form-control border-start-0 ps-0" id="adminLoginId" placeholder="e.g. ADMIN001 or admin@example.com" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="adminPassword" class="form-label text-xs text-uppercase font-monospace fw-bold text-slate-700">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>
+                                <input type="password" class="form-control border-start-0 ps-0" id="adminPassword" placeholder="Enter Admin Password" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold shadow-sm" id="adminLoginBtn">
+                            <i class="fa-solid fa-right-to-bracket me-2"></i> Access Admin Control Center
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card-footer bg-light text-center py-3 border-top border-slate-200">
+                    <span class="text-xs text-muted">Need role access? Return to <a href="/student/login" class="fw-bold text-primary">Student Login</a></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const loginId = document.getElementById('adminLoginId').value.strip ? document.getElementById('adminLoginId').value.trim() : document.getElementById('adminLoginId').value;
+    const password = document.getElementById('adminPassword').value;
+    const alertEl = document.getElementById('loginAlert');
+    const btn = document.getElementById('adminLoginBtn');
+
+    alertEl.classList.add('d-none');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Authenticating...';
+
+    try {
+        const res = await fetch('/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ login_id: loginId, password: password })
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.location.href = data.redirect || '/admin/dashboard';
+        } else {
+            alertEl.textContent = data.error || 'Authentication failed.';
+            alertEl.classList.remove('d-none');
+        }
+    } catch (err) {
+        alertEl.textContent = 'Server connection error. Please try again.';
+        alertEl.classList.remove('d-none');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket me-2"></i> Access Admin Control Center';
+    }
+});
+</script>
+{% endblock %}

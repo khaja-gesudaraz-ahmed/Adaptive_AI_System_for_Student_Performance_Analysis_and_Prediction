@@ -1,0 +1,512 @@
+{% extends "base.html" %}
+
+{% block title %}Student Portal — Student Performance Analyzer & Marks Prediction System Performance & Intelligence{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+
+    <!-- Top Banner -->
+    <div class="card card-custom bg-gradient-slate text-white shadow-sm mb-4 border-0">
+        <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <span class="badge bg-primary-subtle text-primary mb-2 px-3 py-1 rounded-pill fw-bold">Adaptive AI System</span>
+                <h2 class="fw-bold mb-1">Student Performance Analysis & Prediction</h2>
+                <p class="mb-0 text-slate-300">Powered by Decision Tree ML, Explainable AI (SHAP), Personalized Study Planner & Placement Readiness</p>
+            </div>
+            <div>
+                <a href="#predictFormCard" class="btn btn-primary btn-lg rounded-pill shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles me-2"></i> Analyze Student
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column: Full Student Evaluation Input Form -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card card-custom shadow-sm border-0 sticky-form" id="predictFormCard">
+                <div class="card-header bg-transparent border-0 pt-3 px-4">
+                    <h5 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-user-pen text-primary me-2"></i> Enter Student Details</h5>
+                </div>
+                <div class="card-body p-4 overflow-auto" style="max-height: 80vh;">
+                    <form id="studentForm">
+                        <input type="hidden" id="studentId" value="">
+
+                        <!-- 1. Personal & Current Academic Details -->
+                        <h6 class="text-xs font-monospace text-uppercase text-primary fw-bold mb-3">1. Personal & Current Academic Details</h6>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Student Name</label>
+                            <input type="text" class="form-control" id="name" placeholder="e.g. Alex Morgan" required>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Department</label>
+                                <select class="form-select" id="department">
+                                    <option value="CSE" selected>CSE</option>
+                                    <option value="ECE">ECE</option>
+                                    <option value="IT">IT</option>
+                                    <option value="EEE">EEE</option>
+                                    <option value="Mechanical">Mechanical</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Semester</label>
+                                <select class="form-select" id="semester">
+                                    <option value="1">Sem 1</option>
+                                    <option value="2">Sem 2</option>
+                                    <option value="3">Sem 3</option>
+                                    <option value="4">Sem 4</option>
+                                    <option value="5" selected>Sem 5</option>
+                                    <option value="6">Sem 6</option>
+                                    <option value="7">Sem 7</option>
+                                    <option value="8">Sem 8</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Section</label>
+                                <select class="form-select" id="section">
+                                    <option value="A" selected>Sec A</option>
+                                    <option value="B">Sec B</option>
+                                    <option value="C">Sec C</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">CGPA</label>
+                                <input type="number" step="0.01" min="0" max="10" class="form-control" id="cgpa" value="7.8">
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Attendance (%)</label>
+                                <input type="number" min="0" max="100" class="form-control" id="attendance" placeholder="e.g. 78" value="78" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Study Hours / Day</label>
+                                <input type="number" step="0.5" min="0" max="18" class="form-control" id="study_hours" placeholder="e.g. 5" value="5" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">DBMS Marks</label>
+                                <input type="number" min="0" max="100" class="form-control" id="dbms_marks" placeholder="e.g. 72" value="72" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Java Marks</label>
+                                <input type="number" min="0" max="100" class="form-control" id="java_marks" placeholder="e.g. 68" value="68" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Previous Sem %</label>
+                                <input type="number" min="0" max="100" class="form-control" id="prev_sem_percentage" placeholder="e.g. 81" value="81" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Internal Marks</label>
+                                <input type="number" min="0" max="100" class="form-control" id="internal_marks" placeholder="e.g. 65" value="65" required>
+                                <span class="text-xs text-muted">Enter 0 if not available</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Medical Leave</label>
+                            <select class="form-select" id="medical_leave">
+                                <option value="No" selected>No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+
+                        <!-- 2. Educational Background -->
+                        <hr class="my-4">
+                        <h6 class="text-xs font-monospace text-uppercase text-warning fw-bold mb-3">2. Educational Background</h6>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">10th Board</label>
+                                <select class="form-select" id="tenth_board">
+                                    <option value="CBSE" selected>CBSE</option>
+                                    <option value="ICSE">ICSE</option>
+                                    <option value="State Board">State Board</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">10th Percentage (%)</label>
+                                <input type="number" min="0" max="100" class="form-control" id="tenth_percentage" value="85">
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">12th Board</label>
+                                <select class="form-select" id="twelfth_board">
+                                    <option value="CBSE" selected>CBSE</option>
+                                    <option value="ICSE">ICSE</option>
+                                    <option value="State Board">State Board</option>
+                                    <option value="Diploma">Diploma</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">12th Percentage (%)</label>
+                                <input type="number" min="0" max="100" class="form-control" id="twelfth_percentage" value="82">
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">School Type</label>
+                                <select class="form-select" id="school_type">
+                                    <option value="Private" selected>Private</option>
+                                    <option value="Government">Government</option>
+                                    <option value="Aided">Aided</option>
+                                    <option value="International">International</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">School Location</label>
+                                <select class="form-select" id="school_location">
+                                    <option value="Urban" selected>Urban</option>
+                                    <option value="Rural">Rural</option>
+                                    <option value="Semi-Urban">Semi-Urban</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 3. Technology Access & Career Skills -->
+                        <hr class="my-4">
+                        <h6 class="text-xs font-monospace text-uppercase text-success fw-bold mb-3">3. Technology Access & Skills</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Owns Laptop/Computer</label>
+                            <select class="form-select" id="own_laptop">
+                                <option value="Yes" selected>Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Smartphone Available</label>
+                                <select class="form-select" id="smartphone">
+                                    <option value="Yes" selected>Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Internet at Home</label>
+                                <select class="form-select" id="internet">
+                                    <option value="Yes" selected>Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Laptop Usage (Years)</label>
+                                <input type="number" step="0.5" min="0" max="10" class="form-control" id="laptop_years" value="2">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Prog. Experience (Years)</label>
+                                <input type="number" step="0.5" min="0" max="10" class="form-control" id="programming_experience" placeholder="e.g. 1" value="1">
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Coding Score (/100)</label>
+                                <input type="number" min="0" max="100" class="form-control" id="coding_score" value="70">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Comm. Score (/100)</label>
+                                <input type="number" min="0" max="100" class="form-control" id="communication_score" value="75">
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-4">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Projects Built</label>
+                                <input type="number" min="0" max="20" class="form-control" id="projects_count" value="2">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Internships</label>
+                                <input type="number" min="0" max="10" class="form-control" id="internships_count" value="1">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm" id="btnSubmitPredict">
+                            <i class="fa-solid fa-microchip me-2"></i> Predict
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Interactive Multi-Tab Intelligence Output -->
+        <div class="col-xl-8 col-lg-7">
+            <!-- Navigation Tabs for Features 1-6 -->
+            <ul class="nav nav-pills custom-nav-pills mb-3 gap-2" id="featureTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-pill px-3" id="tab-shap-link" data-bs-toggle="tab" data-bs-target="#tab-shap" type="button" role="tab">
+                        <i class="fa-solid fa-network-wired me-1"></i> 1. SHAP AI Explanation
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-3" id="tab-planner-link" data-bs-toggle="tab" data-bs-target="#tab-planner" type="button" role="tab">
+                        <i class="fa-solid fa-calendar-week me-1"></i> 2. AI Study Planner
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-3" id="tab-timeline-link" data-bs-toggle="tab" data-bs-target="#tab-timeline" type="button" role="tab">
+                        <i class="fa-solid fa-timeline me-1"></i> 3. Performance Timeline
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-3" id="tab-placement-link" data-bs-toggle="tab" data-bs-target="#tab-placement" type="button" role="tab">
+                        <i class="fa-solid fa-briefcase me-1"></i> 4. Placement Readiness
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-3" id="tab-ranking-link" data-bs-toggle="tab" data-bs-target="#tab-ranking" type="button" role="tab">
+                        <i class="fa-solid fa-ranking-star me-1"></i> 5. Student Rankings
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Contents -->
+            <div class="tab-content" id="featureTabContent">
+
+                <!-- ═════════ TAB 1: SHAP EXPLAINABLE AI ═════════ -->
+                <div class="tab-pane fade show active" id="tab-shap" role="tabpanel">
+                    <!-- Default Initial State Placeholder -->
+                    <div id="shapPlaceholder" class="card card-custom text-center py-5 shadow-sm border-0">
+                        <div class="card-body">
+                            <i class="fa-solid fa-brain fs-1 text-primary mb-3"></i>
+                            <h5 class="fw-bold">Ready for Prediction</h5>
+                            <p class="text-muted small">Fill out the student details form on the left and click <strong>Predict</strong> to generate SHAP explanations, study plan, and placement insights.</p>
+                        </div>
+                    </div>
+
+                    <!-- SHAP Results Container (Hidden initially) -->
+                    <div id="shapResultsContainer" class="d-none">
+                        <!-- Prediction & Confidence Banner -->
+                        <div class="card card-custom shadow-sm border-0 mb-4 bg-slate-900 text-white">
+                            <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                <div>
+                                    <span class="text-xs text-uppercase font-monospace text-slate-400 fw-bold">Prediction Output</span>
+                                    <h3 class="fw-bold mb-1" id="resStudentName">Student Name</h3>
+                                    <div class="d-flex align-items-center gap-2 mt-2">
+                                        <span class="badge fs-6 px-3 py-2" id="resResultBadge">Pass</span>
+                                        <span class="badge fs-6 px-3 py-2" id="resRiskBadge">Risk Level</span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <a href="#" id="btnDownloadPdf" class="btn btn-danger btn-lg rounded-pill shadow-sm" target="_blank">
+                                        <i class="fa-solid fa-file-pdf me-2"></i> Download PDF Report
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SHAP Plain English Explanation Alert -->
+                        <div class="alert alert-primary border-0 shadow-sm d-flex align-items-center gap-3 p-3 mb-4 rounded-3">
+                            <div class="fs-2 text-primary"><i class="fa-solid fa-circle-info"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1">AI Prediction Reason (SHAP Explanation)</h6>
+                                <p class="mb-0 text-sm" id="resShapEnglishText">Analyzing primary drivers...</p>
+                            </div>
+                        </div>
+
+                        <!-- SHAP Feature Importance Waterfall & Table -->
+                        <div class="row g-4 mb-4">
+                            <div class="col-lg-7">
+                                <div class="card card-custom shadow-sm border-0 h-100">
+                                    <div class="card-header bg-transparent border-0 pt-3 px-3">
+                                        <h6 class="fw-bold mb-0"><i class="fa-solid fa-chart-column text-primary me-2"></i> SHAP Feature Impact Chart</h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <canvas id="shapWaterfallChart" height="230"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-5">
+                                <div class="card card-custom shadow-sm border-0 h-100">
+                                    <div class="card-header bg-transparent border-0 pt-3 px-3">
+                                        <h6 class="fw-bold mb-0"><i class="fa-solid fa-list-check text-success me-2"></i> Top Influencing Factors</h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <ul class="list-group list-group-flush text-sm" id="resTopFactorsList">
+                                            <!-- Dynamically populated -->
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Teacher Suggestions & Anomaly Alert -->
+                        <div class="card card-custom shadow-sm border-0 mb-4">
+                            <div class="card-header bg-transparent border-0 pt-3 px-4">
+                                <h6 class="fw-bold mb-0"><i class="fa-solid fa-user-nurse text-danger me-2"></i> Teacher Recommendations & Remedial Actions</h6>
+                            </div>
+                            <div class="card-body p-4">
+                                <div id="resAnomalyBox" class="alert alert-warning border-0 d-none mb-3">
+                                    <i class="fa-solid fa-triangle-exclamation me-2"></i> <strong id="resAnomalyMsg"></strong>
+                                </div>
+                                <div id="resAdaptiveBox" class="alert alert-info border-0 d-none mb-3">
+                                    <i class="fa-solid fa-kit-medical me-2"></i> <span id="resAdaptiveMsg"></span>
+                                </div>
+                                <ul class="list-group list-group-flush text-sm" id="resSuggestionsList"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═════════ TAB 2: AI PERSONALIZED STUDY PLANNER ═════════ -->
+                <div class="tab-pane fade" id="tab-planner" role="tabpanel">
+                    <div class="card card-custom shadow-sm border-0 mb-4">
+                        <div class="card-header bg-transparent border-0 pt-3 px-4 d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-0"><i class="fa-solid fa-calendar-week text-primary me-2"></i> AI Personalized Weekly Study Timetable</h5>
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3" id="plannerTargetHours">21.0 Target Hours / Week</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-3" id="weeklyScheduleGrid">
+                                <div class="col-12 text-center py-4 text-muted">Generate a student prediction to render dynamic weekly study timetable.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═════════ TAB 3: PERFORMANCE TIMELINE ═════════ -->
+                <div class="tab-pane fade" id="tab-timeline" role="tabpanel">
+                    <div class="card card-custom shadow-sm border-0 mb-4">
+                        <div class="card-header bg-transparent border-0 pt-3 px-4 d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-0"><i class="fa-solid fa-timeline text-info me-2"></i> Multi-Semester Performance Progression</h5>
+                            <span class="badge bg-info-subtle text-info rounded-pill px-3" id="timelineStatusBadge">STABLE</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="alert alert-info border-0 mb-4" id="timelineAiSummary">
+                                <i class="fa-solid fa-robot me-2"></i> Performance trends show stable progress across active semesters.
+                            </div>
+                            <div class="mb-4">
+                                <canvas id="timelineChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═════════ TAB 4: PLACEMENT READINESS SCORE ═════════ -->
+                <div class="tab-pane fade" id="tab-placement" role="tabpanel">
+                    <div class="card card-custom shadow-sm border-0 mb-4">
+                        <div class="card-header bg-transparent border-0 pt-3 px-4">
+                            <h5 class="fw-bold mb-0"><i class="fa-solid fa-briefcase text-success me-2"></i> Placement Readiness & Corporate Matching</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-4 align-items-center">
+                                <div class="col-md-5 text-center">
+                                    <div class="position-relative d-inline-block">
+                                        <canvas id="placementGaugeChart" width="220" height="140"></canvas>
+                                        <div class="gauge-center-text">
+                                            <h2 class="fw-bold mb-0 text-primary" id="placementScoreVal">82%</h2>
+                                            <span class="text-xs text-muted">Readiness Score</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-7">
+                                    <h6 class="fw-bold mb-2">Target Eligible Companies</h6>
+                                    <div id="companyBadgesContainer" class="d-flex flex-wrap gap-2 mb-3">
+                                        <span class="badge bg-primary px-3 py-2">Infosys</span>
+                                        <span class="badge bg-primary px-3 py-2">TCS</span>
+                                        <span class="badge bg-primary px-3 py-2">Accenture</span>
+                                        <span class="badge bg-primary px-3 py-2">Cognizant</span>
+                                    </div>
+                                    <h6 class="fw-bold mb-2">Placement Improvement Action Items</h6>
+                                    <ul class="list-group list-group-flush text-sm" id="placementSuggestionsList"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═════════ TAB 5: STUDENT RANKINGS ═════════ -->
+                <div class="tab-pane fade" id="tab-ranking" role="tabpanel">
+                    <div class="card card-custom shadow-sm border-0 mb-4">
+                        <div class="card-header bg-transparent border-0 pt-3 px-4">
+                            <h5 class="fw-bold mb-0"><i class="fa-solid fa-ranking-star text-warning me-2"></i> Overall Student Performance Leaderboard</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 text-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Dept Rank</th>
+                                            <th>Class Rank</th>
+                                            <th>Student Name</th>
+                                            <th>Overall Score</th>
+                                            <th>Attendance (20%)</th>
+                                            <th>CGPA (30%)</th>
+                                            <th>Internal (20%)</th>
+                                            <th>Award</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rankingTableBody">
+                                        <tr><td colspan="8" class="text-center py-3 text-muted">Loading leaderboard data...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Records Table Section (All Analyzed Students) -->
+    <div class="card card-custom shadow-sm border-0 mt-4">
+        <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="fa-solid fa-database text-primary me-2"></i> Analyzed Student Database Records</h5>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill" id="btnRefreshRecords">
+                <i class="fa-solid fa-rotate-right me-1"></i> Refresh Table
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Student Name</th>
+                            <th>Dept</th>
+                            <th>Attendance</th>
+                            <th>Internal</th>
+                            <th>DBMS</th>
+                            <th>Java</th>
+                            <th>Prev Sem %</th>
+                            <th>Result</th>
+                            <th>Risk Level</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsTableBody">
+                        <tr><td colspan="11" class="text-center py-4 text-muted">No student records found. Submit evaluation above.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endblock %}

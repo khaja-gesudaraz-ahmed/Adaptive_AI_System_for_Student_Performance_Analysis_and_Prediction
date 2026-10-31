@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}HOD Department Executive Portal | Student Performance Analyzer & Marks Prediction System{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+
+    <!-- HOD Header Banner -->
+    <div class="card card-custom bg-slate-900 text-white shadow-sm mb-4 border-0">
+        <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <span class="badge bg-warning-subtle text-warning px-3 py-1 rounded-pill fw-bold text-uppercase mb-2">Head of Department Executive Portal</span>
+                <h2 class="fw-bold mb-1">Department of {{ hod_dept }} Overview</h2>
+                <p class="mb-0 text-slate-300 small"><i class="fa-solid fa-user-tie me-1"></i> HOD: <strong>{{ hod_name }}</strong> | Scope: All Semesters (Sem 1 - Sem 8)</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/report/class-pdf?department={{ hod_dept }}&semester=All&section=All" class="btn btn-danger rounded-pill px-4 shadow-sm" target="_blank">
+                    <i class="fa-solid fa-file-pdf me-2"></i> Download Dept PDF Report
+                </a>
+                <a href="/hod/logout" class="btn btn-outline-light rounded-pill px-3"><i class="fa-solid fa-right-from-bracket me-1"></i> Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7 EXECUTIVE SUMMARY CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-lg-2">
+            <div class="card card-custom border-start border-4 border-primary shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Total Students</span>
+                <h3 class="fw-bold text-slate-800 mb-0" id="hodTotalStudents">0</h3>
+            </div>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <div class="card card-custom border-start border-4 border-success shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Avg Department CGPA</span>
+                <h3 class="fw-bold text-success mb-0" id="hodAvgCgpa">0.0</h3>
+            </div>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <div class="card card-custom border-start border-4 border-info shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Avg Attendance</span>
+                <h3 class="fw-bold text-info mb-0" id="hodAvgAttendance">0%</h3>
+            </div>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <div class="card card-custom border-start border-4 border-primary shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Passed Students</span>
+                <h3 class="fw-bold text-primary mb-0" id="hodPassCount">0</h3>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-danger shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">High Risk Count</span>
+                <h3 class="fw-bold text-danger mb-0" id="hodHighRisk">0</h3>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-success shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Placement Readiness</span>
+                <h3 class="fw-bold text-success mb-0" id="hodAvgPlacement">0.0%</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOD PLACEMENT & RANKING INSIGHTS ROW -->
+    <div class="row g-4 mb-4">
+        <!-- Placement Readiness Distribution Card -->
+        <div class="col-lg-6">
+            <div class="card card-custom shadow-sm border-0 h-100">
+                <div class="card-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-briefcase text-success me-2"></i> Placement Readiness Distribution — {{ hod_dept }}</h5>
+                    <span class="badge bg-success-subtle text-success fw-bold">Campus Drive Target</span>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row g-2 text-center mb-3">
+                        <div class="col-3">
+                            <div class="p-2 bg-success-subtle text-success rounded">
+                                <span class="text-xs d-block fw-semibold">Highly Ready</span>
+                                <h4 class="fw-bold mb-0" id="hodHighlyReady">0</h4>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-2 bg-primary-subtle text-primary rounded">
+                                <span class="text-xs d-block fw-semibold">Placement Ready</span>
+                                <h4 class="fw-bold mb-0" id="hodPlacementReady">0</h4>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-2 bg-warning-subtle text-warning rounded">
+                                <span class="text-xs d-block fw-semibold">Needs Improve</span>
+                                <h4 class="fw-bold mb-0 text-dark" id="hodNeedsImprove">0</h4>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-2 bg-danger-subtle text-danger rounded">
+                                <span class="text-xs d-block fw-semibold">Not Ready</span>
+                                <h4 class="fw-bold mb-0" id="hodNotReady">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="hodCriticalGapsList">
+                        <span class="text-xs text-muted fw-bold text-uppercase d-block mb-1">Students with Critical Skill Gaps:</span>
+                        <div id="gapsContainer" class="text-xs text-muted">Checking skills...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Department Performers & Most Improved Card -->
+        <div class="col-lg-6">
+            <div class="card card-custom shadow-sm border-0 h-100">
+                <div class="card-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-trophy text-warning me-2"></i> Department Rank Leaders — {{ hod_dept }}</h5>
+                    <span class="badge bg-warning-subtle text-warning fw-bold">6-Factor Evaluation</span>
+                </div>
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded border">
+                        <div>
+                            <span class="text-xs text-muted d-block">Most Improved Performer:</span>
+                            <strong class="text-slate-800 text-sm" id="hodMostImprovedName">—</strong>
+                        </div>
+                        <span class="badge bg-success" id="hodMostImprovedScore">+0.0</span>
+                    </div>
+                    <div class="table-responsive" style="max-height: 160px;">
+                        <table class="table table-sm table-hover text-xs align-middle mb-0">
+                            <thead class="table-light">
+                                <tr><th>Dept Rank</th><th>USN</th><th>Name</th><th>Score</th><th>Placement</th></tr>
+                            </thead>
+                            <tbody id="hodTopStudentsTable">
+                                <tr><td colspan="5" class="text-center py-2 text-muted">Loading top performers...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEMESTER FILTER BUTTONS & SEARCH BAR -->
+    <div class="card card-custom shadow-sm border-0 mb-4">
+        <div class="card-header bg-white p-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h5 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-layer-group text-primary me-2"></i> Semester-wise {{ hod_dept }} Student Roster</h5>
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <div class="input-group input-group-sm" style="width: 260px;">
+                    <span class="input-group-text bg-light"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" class="form-control" id="hodSearchInput" placeholder="Search {{ hod_dept }} Students..." oninput="debounceHodSearch()">
+                </div>
+                <div class="btn-group btn-group-sm" id="semFilterBtns" role="group">
+                    <button type="button" class="btn btn-outline-primary active" onclick="filterHodSem('All', this)">All Semesters</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="filterHodSem('1', this)">Sem 1</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="filterHodSem('2', this)">Sem 2</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="filterHodSem('3', this)">Sem 3</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="filterHodSem('4', this)">Sem 4</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="filterHodSem('5', this)">Sem 5</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="filterHodSem('6', this)">Sem 6</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="filterHodSem('7', this)">Sem 7</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="filterHodSem('8', this)">Sem 8</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Dept Rank</th>
+                            <th>USN</th>
+                            <th>Student Name</th>
+                            <th>Sem & Sec</th>
+                            <th>Attendance</th>
+                            <th>CGPA</th>
+                            <th>Ranking Score</th>
+                            <th>Placement</th>
+                            <th>Risk Level</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hodStudentsTable">
+                        <tr><td colspan="9" class="text-center py-4 text-muted">Loading department data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+let currentSemFilter = 'All';
+let currentSearchQuery = '';
+let searchDebounceTimer = null;
+
+function debounceHodSearch() {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+        const input = document.getElementById('hodSearchInput');
+        currentSearchQuery = input ? input.value.trim() : '';
+        loadHodAnalytics();
+    }, 300);
+}
+
+async function loadHodAnalytics() {
+    try {
+        const res = await fetch(`/hod/api/analytics?semester=${currentSemFilter}&search=${encodeURIComponent(currentSearchQuery)}`);
+        const data = await res.json();
+        if (!data.success) return;
+
+        document.getElementById('hodTotalStudents').textContent = data.cards.total_students;
+        document.getElementById('hodAvgCgpa').textContent = data.cards.avg_cgpa;
+        document.getElementById('hodAvgAttendance').textContent = `${data.cards.avg_attendance}%`;
+        document.getElementById('hodPassCount').textContent = data.cards.pass_count;
+        document.getElementById('hodHighRisk').textContent = data.cards.high_risk;
+        document.getElementById('hodAvgPlacement').textContent = `${data.cards.avg_placement_readiness ?? 0}%`;
+
+        if (data.placement_summary) {
+            document.getElementById('hodHighlyReady').textContent = data.placement_summary.highly_ready ?? 0;
+            document.getElementById('hodPlacementReady').textContent = data.placement_summary.placement_ready ?? 0;
+            document.getElementById('hodNeedsImprove').textContent = data.placement_summary.needs_improvement ?? 0;
+            document.getElementById('hodNotReady').textContent = data.placement_summary.not_ready ?? 0;
+        }
+
+        const tbody = document.getElementById('hodStudentsTable');
+        if (!data.students || data.students.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted">No student records found for this semester.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        data.students.forEach(s => {
+            const tr = document.createElement('tr');
+            const riskBadge = s.risk_level === 'High' ? 'bg-danger' : (s.risk_level === 'Medium' ? 'bg-warning text-dark' : 'bg-success');
+            
+            let pCatBadge = 'bg-secondary';
+            if (s.placement_category === 'Highly Ready') pCatBadge = 'bg-success';
+            else if (s.placement_category === 'Placement Ready') pCatBadge = 'bg-primary';
+            else if (s.placement_category === 'Needs Improvement') pCatBadge = 'bg-warning text-dark';
+            else if (s.placement_category === 'Not Ready') pCatBadge = 'bg-danger';
+
+            let rcBadge = '<span class="badge bg-secondary-subtle text-secondary">New</span>';
+            if (String(s.rank_change).startsWith('+')) {
+                rcBadge = `<span class="badge bg-success-subtle text-success fw-bold"><i class="fa-solid fa-arrow-up me-1"></i>${s.rank_change}</span>`;
+            } else if (String(s.rank_change).startsWith('-')) {
+                rcBadge = `<span class="badge bg-danger-subtle text-danger fw-bold"><i class="fa-solid fa-arrow-down me-1"></i>${s.rank_change}</span>`;
+            }
+
+            tr.innerHTML = `
+                <td>
+                    <span class="fw-bold text-slate-800">#${s.department_rank || '—'}</span>
+                    <small class="text-muted ms-1">${rcBadge}</small>
+                </td>
+                <td class="fw-bold font-monospace text-primary">${s.usn || 'N/A'}</td>
+                <td class="fw-semibold">${s.name}</td>
+                <td>Sem ${s.current_semester || s.semester || 6} (Sec ${s.section || 'A'})</td>
+                <td>${s.attendance}%</td>
+                <td class="fw-bold">${s.cgpa || 7.5}</td>
+                <td><span class="badge bg-primary-subtle text-primary fw-bold">${s.ranking_score ?? '0.0'}</span></td>
+                <td>
+                    <div class="fw-bold text-success">${s.placement_score ?? 0}%</div>
+                    <span class="badge ${pCatBadge} text-xs">${s.placement_category || 'N/A'}</span>
+                </td>
+                <td><span class="badge ${riskBadge}">${s.risk_level || 'Low'}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Load Ranking & Placement insights
+        loadHodRankingsAndPlacement();
+
+    } catch (err) {
+        console.error('Error loading HOD analytics:', err);
+    }
+}
+
+async function loadHodRankingsAndPlacement() {
+    try {
+        const [rRes, pRes] = await Promise.all([
+            fetch('/hod/api/rankings'),
+            fetch('/hod/api/placement')
+        ]);
+        const rData = await rRes.json();
+        const pData = await pRes.json();
+
+        // Top Department Students Table
+        if (rData.success && rData.top_students) {
+            const topTbody = document.getElementById('hodTopStudentsTable');
+            topTbody.innerHTML = '';
+            rData.top_students.slice(0, 5).forEach(s => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="fw-bold text-primary">#${s.department_rank}</td>
+                    <td class="font-monospace">${s.usn}</td>
+                    <td class="fw-semibold text-truncate" style="max-width: 110px;">${s.name}</td>
+                    <td class="fw-bold">${s.overall_score}</td>
+                    <td><span class="badge bg-success-subtle text-success">${s.placement_category || 'Ready'}</span></td>
+                `;
+                topTbody.appendChild(tr);
+            });
+
+            if (rData.most_improved) {
+                document.getElementById('hodMostImprovedName').textContent = `${rData.most_improved.name} (${rData.most_improved.usn})`;
+                document.getElementById('hodMostImprovedScore').textContent = `Score ${rData.most_improved.improvement_score}/100`;
+            }
+        }
+
+        // Critical Gaps
+        if (pData.success && pData.students_with_critical_gaps) {
+            const gapsEl = document.getElementById('gapsContainer');
+            if (pData.students_with_critical_gaps.length === 0) {
+                gapsEl.innerHTML = '<span class="text-success"><i class="fa-solid fa-check me-1"></i> No students with critical skill deficits in this department.</span>';
+            } else {
+                gapsEl.innerHTML = pData.students_with_critical_gaps.slice(0, 3).map(s => `
+                    <div class="py-1 border-bottom">
+                        <strong>${s.name}</strong> (${s.usn}) — Weak: <span class="text-danger">${(s.weak_areas || []).join(', ') || 'Low Score'}</span>
+                    </div>
+                `).join('');
+            }
+        }
+    } catch (err) {
+        console.error('Error loading ranking/placement insights:', err);
+    }
+}
+
+function filterHodSem(sem, btn) {
+    currentSemFilter = sem;
+    document.querySelectorAll('#semFilterBtns .btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadHodAnalytics();
+}
+
+document.addEventListener('DOMContentLoaded', loadHodAnalytics);
+</script>
+{% endblock %}

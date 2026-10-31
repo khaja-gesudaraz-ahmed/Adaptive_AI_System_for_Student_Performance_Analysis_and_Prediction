@@ -1,0 +1,154 @@
+/* ═══════════════════════════════════════════════════════
+   Student Performance Analyzer & Marks Prediction System — Student Performance Analyzer Design System
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+    --font-primary: 'DM Sans', sans-serif;
+    --font-heading: 'Syne', sans-serif;
+    
+    --bg-body: #F8FAFC;
+    --bg-card: #FFFFFF;
+    --border-color: #E2E8F0;
+    --text-main: #0F172A;
+    --text-muted: #64748B;
+    
+    --primary-color: #2563EB;
+    --primary-hover: #1D4ED8;
+    --success-color: #16A34A;
+    --warning-color: #D97706;
+    --danger-color: #DC2626;
+    --info-color: #0284C7;
+}
+
+body.dark-mode {
+    --bg-body: #0F172A;
+    --bg-card: #1E293B;
+    --border-color: #334155;
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    
+    --primary-color: #3B82F6;
+    --primary-hover: #60A5FA;
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, h5, h6, .brand-title {
+    font-family: var(--font-heading);
+}
+
+.bg-slate-900 {
+    background-color: #0F172A !important;
+}
+
+.bg-gradient-slate {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+}
+
+.card-custom {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+    border-radius: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-custom:hover {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+.icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.875rem; }
+.fs-7 { font-size: 0.7rem; }
+
+.custom-nav-pills .nav-link {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.875rem;
+    background-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.custom-nav-pills .nav-link.active {
+    background-color: var(--primary-color);
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.sticky-form {
+    position: sticky;
+    top: 90px;
+}
+
+.gauge-center-text {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+body.dark-mode .table {
+    --bs-table-bg: #1E293B;
+    --bs-table-color: #F8FAFC;
+    border-color: #334155;
+}
+
+body.dark-mode .table-light {
+    --bs-table-bg: #0F172A;
+    --bs-table-color: #94A3B8;
+}
+
+body.dark-mode .form-control, 
+body.dark-mode .form-select {
+    background-color: #0F172A;
+    border-color: #334155;
+    color: #F8FAFC;
+}
+
+/* Doubt Discussion Styles */
+.doubt-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.doubt-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+}
+
+.accepted-answer-card {
+    border-left: 4px solid #10B981 !important;
+    background-color: rgba(16, 185, 129, 0.04) !important;
+}
+
+.reply-thread {
+    border-left: 3px solid #6366F1;
+    padding-left: 1rem;
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.max-vh-50 {
+    max-height: 50vh;
+    object-fit: contain;
+}
+
+.avatar-circle {
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+}
+

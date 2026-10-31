@@ -1,0 +1,865 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Control Center | Student Performance Analyzer & Marks Prediction System{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+
+    <!-- Admin Header Banner -->
+    <div class="card card-custom bg-slate-900 text-white shadow-sm mb-4 border-0">
+        <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <span class="badge bg-danger-subtle text-danger px-3 py-1 rounded-pill fw-bold text-uppercase mb-2">College-Wide System Control</span>
+                <h2 class="fw-bold mb-1">System Administration Control Center</h2>
+                <p class="mb-0 text-slate-300 small">
+                    <i class="fa-solid fa-user-shield me-1"></i> Logged in as: <strong>{{ admin_name }}</strong> |
+                    Default Demo Password: <code class="text-warning bg-slate-800 px-2 py-1 rounded">Rns@123</code>
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                    <i class="fa-solid fa-user-plus me-2"></i> Create Teacher / HOD Account
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                        <i class="fa-solid fa-download me-1"></i> Export Credentials Report
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><a class="dropdown-link dropdown-item" href="/admin/api/export-credentials?format=excel"><i class="fa-solid fa-file-excel text-success me-2"></i> Download Excel (.xlsx / .csv)</a></li>
+                        <li><a class="dropdown-link dropdown-item" href="/admin/api/export-credentials?format=pdf" target="_blank"><i class="fa-solid fa-file-pdf text-danger me-2"></i> Download Official PDF Report</a></li>
+                    </ul>
+                </div>
+                <a href="/admin/logout" class="btn btn-outline-danger rounded-pill px-3"><i class="fa-solid fa-right-from-bracket me-1"></i> Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6 COLLEGE SUMMARY METRIC CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-primary shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Total Students</span>
+                <h3 class="fw-bold text-slate-800 mb-0" id="admTotalStudents">0</h3>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-success shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">College Avg CGPA</span>
+                <h3 class="fw-bold text-success mb-0" id="admAvgCgpa">0.0</h3>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-info shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Avg Attendance</span>
+                <h3 class="fw-bold text-info mb-0" id="admAvgAtt">0%</h3>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-warning shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Avg Placement</span>
+                <h3 class="fw-bold text-warning mb-0" id="admAvgPlacement">0%</h3>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-success shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">Highly Ready</span>
+                <h3 class="fw-bold text-success mb-0" id="admHighlyReady">0</h3>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card card-custom border-start border-4 border-danger shadow-sm h-100 p-3">
+                <span class="text-muted text-uppercase text-xs fw-bold">High Risk Count</span>
+                <h3 class="fw-bold text-danger mb-0" id="admHighRisk">0</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEATURE 3: DEPARTMENT COMPARISON & ANALYTICS SECTION -->
+    <div class="card card-custom shadow-sm border-0 mb-4">
+        <div class="card-header bg-slate-900 text-white p-3 border-0 rounded-top-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h5 class="fw-bold mb-0"><i class="fa-solid fa-chart-pie text-primary me-2"></i> Department Comparison &amp; Institutional Analytics</h5>
+                <small class="text-slate-400">Live comparative performance metrics across all academic departments</small>
+            </div>
+
+            <!-- FILTERS: Academic Year, Department, Semester, Section -->
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <select class="form-select form-select-sm bg-slate-800 text-white border-slate-700" id="filterAcadYear" onchange="loadDepartmentAnalytics()" style="width: 125px;">
+                    <option value="All">All Years</option>
+                    <option value="2024-25">2024-25</option>
+                    <option value="2023-24">2023-24</option>
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                </select>
+                <select class="form-select form-select-sm bg-slate-800 text-white border-slate-700" id="filterDept" onchange="loadDepartmentAnalytics()" style="width: 110px;">
+                    <option value="All">All Depts</option>
+                    <option value="CSE">CSE</option>
+                    <option value="ISE">ISE</option>
+                    <option value="ECE">ECE</option>
+                    <option value="EEE">EEE</option>
+                    <option value="MECH">MECH</option>
+                    <option value="CIVIL">CIVIL</option>
+                </select>
+                <select class="form-select form-select-sm bg-slate-800 text-white border-slate-700" id="filterSem" onchange="loadDepartmentAnalytics()" style="width: 105px;">
+                    <option value="All">All Sems</option>
+                    <option value="1">Sem 1</option>
+                    <option value="2">Sem 2</option>
+                    <option value="3">Sem 3</option>
+                    <option value="4">Sem 4</option>
+                    <option value="5">Sem 5</option>
+                    <option value="6">Sem 6</option>
+                    <option value="7">Sem 7</option>
+                    <option value="8">Sem 8</option>
+                </select>
+                <select class="form-select form-select-sm bg-slate-800 text-white border-slate-700" id="filterSec" onchange="loadDepartmentAnalytics()" style="width: 100px;">
+                    <option value="All">All Secs</option>
+                    <option value="A">Sec A</option>
+                    <option value="B">Sec B</option>
+                    <option value="C">Sec C</option>
+                </select>
+                <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="loadDepartmentAnalytics()">
+                    <i class="fa-solid fa-rotate me-1"></i> Apply
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+
+            <!-- 5 CHART.JS COMPARISON CHARTS -->
+            <div class="row g-4 mb-4">
+                <!-- 1. Department Average CGPA Bar Chart -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-custom h-100 shadow-sm border p-3">
+                        <h6 class="fw-bold text-slate-800 mb-2"><i class="fa-solid fa-chart-column text-primary me-2"></i> Department Average CGPA</h6>
+                        <div style="height: 200px;">
+                            <canvas id="deptCgpaChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Department Pass/Fail Comparison -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-custom h-100 shadow-sm border p-3">
+                        <h6 class="fw-bold text-slate-800 mb-2"><i class="fa-solid fa-percent text-success me-2"></i> Pass vs Fail Rate (%)</h6>
+                        <div style="height: 200px;">
+                            <canvas id="deptPassFailChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Department Attendance Comparison -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-custom h-100 shadow-sm border p-3">
+                        <h6 class="fw-bold text-slate-800 mb-2"><i class="fa-solid fa-clipboard-user text-info me-2"></i> Average Attendance (%)</h6>
+                        <div style="height: 200px;">
+                            <canvas id="deptAttChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Department High-Risk Students Chart -->
+                <div class="col-lg-6 col-md-6">
+                    <div class="card card-custom h-100 shadow-sm border p-3">
+                        <h6 class="fw-bold text-slate-800 mb-2"><i class="fa-solid fa-triangle-exclamation text-danger me-2"></i> High-Risk Student Count</h6>
+                        <div style="height: 200px;">
+                            <canvas id="deptRiskChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Department Placement Readiness Chart -->
+                <div class="col-lg-6 col-md-12">
+                    <div class="card card-custom h-100 shadow-sm border p-3">
+                        <h6 class="fw-bold text-slate-800 mb-2"><i class="fa-solid fa-briefcase text-success me-2"></i> Placement Readiness Index (%)</h6>
+                        <div style="height: 200px;">
+                            <canvas id="deptPlacementChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Department Ranking & Comparison Table -->
+            <div class="card card-custom shadow-sm border">
+                <div class="card-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-ranking-star text-warning me-2"></i> Official Department Performance Rankings &amp; Metrics</h6>
+                    <span class="badge bg-primary-subtle text-primary fw-bold">Formula: CGPA 25% + Att 20% + Pass 20% + IA 15% + Rank 10% + Placement 10%</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 text-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Department</th>
+                                    <th class="text-center">Students</th>
+                                    <th class="text-center">Avg CGPA</th>
+                                    <th class="text-center">Avg Attendance</th>
+                                    <th class="text-center">Pass %</th>
+                                    <th class="text-center">High Risk</th>
+                                    <th class="text-center">Avg IA (0-100)</th>
+                                    <th class="text-center">Avg Placement</th>
+                                    <th class="text-center fw-bold text-primary">Composite Score</th>
+                                </tr>
+                            </thead>
+                            <tbody id="departmentRankingTable">
+                                <tr><td colspan="10" class="text-center py-3 text-muted">Loading department rankings...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- COLLEGE-WIDE STUDENT RANKINGS & PLACEMENT ANALYTICS ROW -->
+    <div class="row g-4 mb-4">
+        <!-- Top 10 College Rank Performers -->
+        <div class="col-lg-7">
+            <div class="card card-custom shadow-sm border-0 h-100">
+                <div class="card-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-trophy text-warning me-2"></i> Top Ranked College Performers (Top 10)</h5>
+                    <span class="badge bg-warning-subtle text-warning fw-bold">College-Wide</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 text-xs">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>USN</th>
+                                    <th>Name</th>
+                                    <th>Dept & Sem</th>
+                                    <th>CGPA</th>
+                                    <th>Score</th>
+                                    <th>Rank Change</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminTopStudentsTable">
+                                <tr><td colspan="7" class="text-center py-3 text-muted">Loading top performers...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Awards & Placement Breakdown Card -->
+        <div class="col-lg-5">
+            <div class="card card-custom shadow-sm border-0 h-100">
+                <div class="card-header bg-white p-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-slate-800"><i class="fa-solid fa-award text-primary me-2"></i> Institutional Honors &amp; Placement Tiers</h5>
+                </div>
+                <div class="card-body p-3">
+                    <!-- Honors Badges -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded border">
+                            <div>
+                                <small class="text-muted d-block text-xs">Most Improved Student:</small>
+                                <strong class="text-slate-800 text-xs" id="adMostImproved">—</strong>
+                            </div>
+                            <span class="badge bg-success" id="adMostImprovedScore">+0.0</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded border">
+                            <div>
+                                <small class="text-muted d-block text-xs">Best Attendance Award:</small>
+                                <strong class="text-slate-800 text-xs" id="adBestAttendance">—</strong>
+                            </div>
+                            <span class="badge bg-info" id="adBestAttendanceScore">100%</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded border">
+                            <div>
+                                <small class="text-muted d-block text-xs">Most Consistent Performer:</small>
+                                <strong class="text-slate-800 text-xs" id="adMostConsistent">—</strong>
+                            </div>
+                            <span class="badge bg-primary" id="adMostConsistentScore">Score 100</span>
+                        </div>
+                    </div>
+
+                    <!-- Placement Tiers Distribution -->
+                    <h6 class="fw-bold text-xs text-uppercase text-muted mb-2">College Placement Readiness Distribution:</h6>
+                    <div class="row g-2 text-center text-xs">
+                        <div class="col-6">
+                            <div class="p-2 bg-success-subtle text-success rounded">
+                                <span class="d-block fw-semibold">Highly Ready (80+)</span>
+                                <h5 class="fw-bold mb-0" id="adPlacementHighly">0</h5>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 bg-primary-subtle text-primary rounded">
+                                <span class="d-block fw-semibold">Placement Ready (65-80)</span>
+                                <h5 class="fw-bold mb-0" id="adPlacementReady">0</h5>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 bg-warning-subtle text-warning rounded">
+                                <span class="d-block fw-semibold">Needs Improvement</span>
+                                <h5 class="fw-bold mb-0 text-dark" id="adPlacementNeeds">0</h5>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 bg-danger-subtle text-danger rounded">
+                                <span class="d-block fw-semibold">Not Ready (&lt;50)</span>
+                                <h5 class="fw-bold mb-0" id="adPlacementNotReady">0</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- CREATE USER MODAL -->
+<div class="modal fade" id="createUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-slate-900 text-white border-0">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-plus text-primary me-2"></i> Create Teacher / HOD Account</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="createUserForm">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-xs text-uppercase">Assigned Role</label>
+                        <select class="form-select" id="newRole" required>
+                            <option value="Class Teacher">Class Teacher</option>
+                            <option value="Teacher">Teacher (No Dept Access)</option>
+                            <option value="HOD">Head of Department (HOD)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-xs text-uppercase">Full Name</label>
+                        <input type="text" class="form-control" id="newName" placeholder="e.g. Dr. Rajesh Kumar" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-xs text-uppercase">Email Address</label>
+                        <input type="email" class="form-control" id="newEmail" placeholder="e.g. rajesh@example.com" required>
+                    </div>
+
+                    <div class="mb-3" id="deptGroup">
+                        <label class="form-label fw-bold text-xs text-uppercase">Department</label>
+                        <select class="form-select" id="newDept" required>
+                            <option value="CSE">CSE</option>
+                            <option value="ECE">ECE</option>
+                            <option value="ISE">ISE</option>
+                            <option value="EEE">EEE</option>
+                            <option value="MECH">MECH</option>
+                            <option value="CIVIL">CIVIL</option>
+                            <option value="CSE (AI & ML)">CSE (AI & ML)</option>
+                            <option value="CSE (DS)">CSE (DS)</option>
+                            <option value="CSE (Cyber Security)">CSE (Cyber Security)</option>
+                            <option value="AI&DS">AI&DS</option>
+                            <option value="CSBS">CSBS</option>
+                            <option value="MCA">MCA</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-2 mb-3" id="classAssignmentRow">
+                        <div class="col-6">
+                            <label class="form-label fw-bold text-xs text-uppercase">Semester</label>
+                            <select class="form-select" id="newSem">
+                                <option value="1">Sem 1</option>
+                                <option value="2">Sem 2</option>
+                                <option value="3">Sem 3</option>
+                                <option value="4">Sem 4</option>
+                                <option value="5">Sem 5</option>
+                                <option value="6" selected>Sem 6</option>
+                                <option value="7">Sem 7</option>
+                                <option value="8">Sem 8</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold text-xs text-uppercase">Section</label>
+                            <select class="form-select" id="newSec">
+                                <option value="A" selected>Section A</option>
+                                <option value="B">Section B</option>
+                                <option value="C">Section C</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info text-xs mb-0">
+                        <i class="fa-solid fa-circle-info me-1"></i> Temporary demo password will be set to <strong>Rns@123</strong>. Teacher cannot keep this demo password on first login.
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="submitCreateBtn">Create Account & Generate Credentials</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT ROLE & CLASS ASSIGNMENT MODAL -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-slate-900 text-white border-0">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-user-pen text-warning me-2"></i> Edit Teacher / User Role & Class Assignment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editUserForm">
+                <input type="hidden" id="editUserId">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-xs text-uppercase">Role</label>
+                        <select class="form-select" id="editRole" required>
+                            <option value="Class Teacher">Class Teacher</option>
+                            <option value="Teacher">Teacher (No Dept Access)</option>
+                            <option value="HOD">Head of Department (HOD)</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="editDeptGroup">
+                        <label class="form-label fw-bold text-xs text-uppercase">Department</label>
+                        <select class="form-select" id="editDept" required>
+                            <option value="CSE">CSE</option>
+                            <option value="ECE">ECE</option>
+                            <option value="ISE">ISE</option>
+                            <option value="EEE">EEE</option>
+                            <option value="MECH">MECH</option>
+                            <option value="CIVIL">CIVIL</option>
+                            <option value="CSE (AI & ML)">CSE (AI & ML)</option>
+                            <option value="CSE (DS)">CSE (DS)</option>
+                            <option value="CSE (Cyber Security)">CSE (Cyber Security)</option>
+                            <option value="AI&DS">AI&DS</option>
+                            <option value="CSBS">CSBS</option>
+                            <option value="MCA">MCA</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-2 mb-3" id="editClassAssignmentRow">
+                        <div class="col-6">
+                            <label class="form-label fw-bold text-xs text-uppercase">Semester</label>
+                            <select class="form-select" id="editSem">
+                                <option value="1">Sem 1</option>
+                                <option value="2">Sem 2</option>
+                                <option value="3">Sem 3</option>
+                                <option value="4">Sem 4</option>
+                                <option value="5">Sem 5</option>
+                                <option value="6">Sem 6</option>
+                                <option value="7">Sem 7</option>
+                                <option value="8">Sem 8</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold text-xs text-uppercase">Section</label>
+                            <select class="form-select" id="editSec">
+                                <option value="A">Section A</option>
+                                <option value="B">Section B</option>
+                                <option value="C">Section C</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning rounded-pill px-4">Save Role & Assignment Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let usersCache = [];
+
+async function loadAdminUsers() {
+    try {
+        const res = await fetch('/admin/api/users');
+        const data = await res.json();
+        const tbody = document.getElementById('adminUsersTable');
+        if (!data.success || !data.users) return;
+
+        usersCache = data.users;
+        document.getElementById('userCountBadge').textContent = `${data.users.length} Accounts`;
+
+        if (data.users.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted">No faculty or HOD accounts created yet.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        data.users.forEach(u => {
+            const tr = document.createElement('tr');
+            let roleBadge = 'bg-primary';
+            if (u.role === 'Admin') roleBadge = 'bg-danger';
+            else if (u.role === 'HOD') roleBadge = 'bg-warning text-dark';
+            else if (u.role === 'Teacher') roleBadge = 'bg-secondary';
+
+            const deptDisplay = u.role === 'Teacher' ? '<span class="badge bg-secondary-subtle text-secondary">None</span>' : (u.department || 'CSE');
+
+            tr.innerHTML = `
+                <td class="fw-bold font-monospace text-slate-800">${u.user_id || 'N/A'}</td>
+                <td class="fw-semibold">${u.name}</td>
+                <td><span class="badge ${roleBadge}">${u.role}</span></td>
+                <td>${deptDisplay}</td>
+                <td>${u.role === 'Class Teacher' ? `Sem ${u.semester} (Sec ${u.section})` : (u.role === 'Teacher' ? '-' : 'All Semesters')}</td>
+                <td class="fw-bold font-monospace text-primary">${u.login_id}</td>
+                <td><code class="text-dark bg-light px-2 py-1 rounded">Rns@123</code></td>
+                <td><span class="badge bg-success-subtle text-success">Active</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary rounded-pill me-1" onclick="openEditRoleModal(${u.id})">
+                        <i class="fa-solid fa-pen-to-square me-1"></i> Edit Role
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="resetUserPassword(${u.id}, '${u.name}')">
+                        <i class="fa-solid fa-key me-1"></i> Reset Password
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error('Error loading users:', err);
+    }
+}
+
+function openEditRoleModal(id) {
+    const user = usersCache.find(u => u.id === id);
+    if (!user) return;
+
+    document.getElementById('editUserId').value = user.id;
+    document.getElementById('editRole').value = user.role;
+    document.getElementById('editDept').value = user.department !== 'None' ? user.department : 'CSE';
+    document.getElementById('editSem').value = user.semester || 6;
+    document.getElementById('editSec').value = user.section || 'A';
+
+    toggleEditRoleFields(user.role);
+
+    new bootstrap.Modal(document.getElementById('editUserModal')).show();
+}
+
+function toggleEditRoleFields(role) {
+    const deptGrp = document.getElementById('editDeptGroup');
+    const classRow = document.getElementById('editClassAssignmentRow');
+    if (role === 'Teacher') {
+        deptGrp.classList.add('d-none');
+        classRow.classList.add('d-none');
+    } else if (role === 'HOD' || role === 'Admin') {
+        deptGrp.classList.remove('d-none');
+        classRow.classList.add('d-none');
+    } else {
+        deptGrp.classList.remove('d-none');
+        classRow.classList.remove('d-none');
+    }
+}
+
+document.getElementById('editRole').addEventListener('change', (e) => {
+    toggleEditRoleFields(e.target.value);
+});
+
+document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('editUserId').value;
+    const payload = {
+        role: document.getElementById('editRole').value,
+        department: document.getElementById('editDept').value,
+        semester: document.getElementById('editSem').value,
+        section: document.getElementById('editSec').value
+    };
+
+    try {
+        const res = await fetch(`/admin/api/update-user/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+            loadAdminUsers();
+        } else {
+            alert(data.error || 'Failed to update role.');
+        }
+    } catch (err) {
+        alert('Server error updating user role.');
+    }
+});
+
+async function resetUserPassword(id, name) {
+    if (!confirm(`Are you sure you want to reset password for ${name}? Password will be reset to demo password: Rns@123`)) return;
+    try {
+        const res = await fetch(`/admin/api/reset-password/${id}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            alert(`Password Reset Successful!\n\nUser: ${name}\nLogin ID: ${data.login_id}\nReset Password: Rns@123\n\nUser must change this password upon login.`);
+            loadAdminUsers();
+        } else {
+            alert(data.error || 'Password reset failed.');
+        }
+    } catch (err) {
+        alert('Server error executing password reset.');
+    }
+}
+
+document.getElementById('newRole').addEventListener('change', (e) => {
+    const deptGrp = document.getElementById('deptGroup');
+    const row = document.getElementById('classAssignmentRow');
+    if (e.target.value === 'Teacher') {
+        deptGrp.classList.add('d-none');
+        row.classList.add('d-none');
+    } else if (e.target.value === 'HOD') {
+        deptGrp.classList.remove('d-none');
+        row.classList.add('d-none');
+    } else {
+        deptGrp.classList.remove('d-none');
+        row.classList.remove('d-none');
+    }
+});
+
+document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+        role: document.getElementById('newRole').value,
+        name: document.getElementById('newName').value,
+        email: document.getElementById('newEmail').value,
+        department: document.getElementById('newDept').value,
+        semester: document.getElementById('newSem').value,
+        section: document.getElementById('newSec').value
+    };
+
+    try {
+        const res = await fetch('/admin/api/create-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(`Account Created Successfully!\n\nRole: ${data.credentials.role}\nLogin ID: ${data.credentials.login_id}\nDepartment Access: ${data.credentials.department}\nTemporary Password: ${data.credentials.temp_password}`);
+            bootstrap.Modal.getInstance(document.getElementById('createUserModal')).hide();
+            document.getElementById('createUserForm').reset();
+            loadAdminUsers();
+        } else {
+            alert(data.error || 'Account creation failed.');
+        }
+    } catch (err) {
+        alert('Server error creating account.');
+    }
+});
+
+// ─── DEPARTMENT COMPARISON CHARTS & RANKINGS ────────────────────────────────
+let chartInstances = {};
+
+function createOrUpdateChart(canvasId, type, config) {
+    if (chartInstances[canvasId]) {
+        chartInstances[canvasId].destroy();
+    }
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    chartInstances[canvasId] = new Chart(canvas, { type, ...config });
+}
+
+async function loadDepartmentAnalytics() {
+    const acadYear = document.getElementById('filterAcadYear').value;
+    const dept = document.getElementById('filterDept').value;
+    const sem = document.getElementById('filterSem').value;
+    const sec = document.getElementById('filterSec').value;
+
+    try {
+        const res = await fetch(`/admin/api/department-analytics?academic_year=${acadYear}&department=${dept}&semester=${sem}&section=${sec}`);
+        const data = await res.json();
+        if (!data.success) return;
+
+        // 1. Update College Summary Cards
+        const ov = data.overall_summary || {};
+        document.getElementById('admTotalStudents').textContent = ov.total_students ?? 0;
+        document.getElementById('admAvgCgpa').textContent = ov.avg_cgpa ?? 0.0;
+        document.getElementById('admAvgAtt').textContent = `${ov.avg_attendance ?? 0}%`;
+        document.getElementById('admAvgPlacement').textContent = `${ov.avg_placement_readiness ?? 0}%`;
+        document.getElementById('admHighRisk').textContent = ov.high_risk_count ?? 0;
+
+        // 2. Render Charts
+        const labels = data.charts.labels || [];
+        
+        // Chart 1: CGPA
+        createOrUpdateChart('deptCgpaChart', 'bar', {
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Avg CGPA',
+                    data: data.charts.cgpa || [],
+                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { min: 0, max: 10 } }
+            }
+        });
+
+        // Chart 2: Pass/Fail
+        createOrUpdateChart('deptPassFailChart', 'bar', {
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Pass %', data: data.charts.pass_rate || [], backgroundColor: 'rgba(34, 197, 94, 0.8)', borderRadius: 6 },
+                    { label: 'Fail %', data: data.charts.fail_rate || [], backgroundColor: 'rgba(239, 68, 68, 0.8)', borderRadius: 6 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { min: 0, max: 100 } }
+            }
+        });
+
+        // Chart 3: Attendance
+        createOrUpdateChart('deptAttChart', 'bar', {
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Attendance %',
+                    data: data.charts.attendance || [],
+                    backgroundColor: 'rgba(14, 165, 233, 0.8)',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { min: 0, max: 100 } }
+            }
+        });
+
+        // Chart 4: High Risk
+        createOrUpdateChart('deptRiskChart', 'bar', {
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'High Risk Count',
+                    data: data.charts.high_risk || [],
+                    backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+
+        // Chart 5: Placement Readiness
+        createOrUpdateChart('deptPlacementChart', 'bar', {
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Placement Readiness %',
+                    data: data.charts.placement_readiness || [],
+                    backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { min: 0, max: 100 } }
+            }
+        });
+
+        // 3. Department Rankings Table
+        const deptTbody = document.getElementById('departmentRankingTable');
+        if (!data.departments || data.departments.length === 0) {
+            deptTbody.innerHTML = `<tr><td colspan="10" class="text-center py-3 text-muted">No department records matching filter criteria.</td></tr>`;
+        } else {
+            deptTbody.innerHTML = '';
+            data.departments.forEach(d => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="fw-bold text-primary">#${d.department_rank}</td>
+                    <td class="fw-semibold">${d.department}</td>
+                    <td class="text-center">${d.student_count}</td>
+                    <td class="text-center fw-bold">${d.avg_cgpa}</td>
+                    <td class="text-center">${d.avg_attendance}%</td>
+                    <td class="text-center"><span class="badge bg-success-subtle text-success">${d.pass_percentage}%</span></td>
+                    <td class="text-center"><span class="badge ${d.high_risk_count > 0 ? 'bg-danger' : 'bg-secondary'}">${d.high_risk_count}</span></td>
+                    <td class="text-center">${d.avg_internal_marks}</td>
+                    <td class="text-center fw-bold text-success">${d.avg_placement_readiness}%</td>
+                    <td class="text-center fw-bold text-primary fs-6">${d.composite_score}</td>
+                `;
+                deptTbody.appendChild(tr);
+            });
+        }
+
+    } catch (err) {
+        console.error('Error loading department analytics:', err);
+    }
+}
+
+async function loadAdminRankingsAndPlacement() {
+    try {
+        const [rRes, pRes] = await Promise.all([
+            fetch('/admin/api/rankings'),
+            fetch('/admin/api/placement')
+        ]);
+        const rData = await rRes.json();
+        const pData = await pRes.json();
+
+        // Top 10 Students Table
+        if (rData.success && rData.top_10) {
+            const topTbody = document.getElementById('adminTopStudentsTable');
+            topTbody.innerHTML = '';
+            rData.top_10.forEach(s => {
+                const tr = document.createElement('tr');
+                let rcBadge = '<span class="badge bg-secondary-subtle text-secondary">New</span>';
+                if (String(s.rank_change).startsWith('+')) rcBadge = `<span class="badge bg-success-subtle text-success fw-bold">+${s.rank_change}</span>`;
+                else if (String(s.rank_change).startsWith('-')) rcBadge = `<span class="badge bg-danger-subtle text-danger fw-bold">${s.rank_change}</span>`;
+
+                tr.innerHTML = `
+                    <td class="fw-bold text-primary">#${s.college_rank}</td>
+                    <td class="font-monospace">${s.usn}</td>
+                    <td class="fw-semibold text-truncate" style="max-width: 120px;">${s.name}</td>
+                    <td>${s.department} Sem ${s.current_semester || 6}</td>
+                    <td class="fw-bold">${s.cgpa || 7.5}</td>
+                    <td class="fw-bold text-primary">${s.overall_score}</td>
+                    <td>${rcBadge}</td>
+                `;
+                topTbody.appendChild(tr);
+            });
+
+            if (rData.most_improved) {
+                document.getElementById('adMostImproved').textContent = `${rData.most_improved.name} (${rData.most_improved.department})`;
+                document.getElementById('adMostImprovedScore').textContent = `Score ${rData.most_improved.improvement_score}/100`;
+            }
+            if (rData.best_attendance) {
+                document.getElementById('adBestAttendance').textContent = `${rData.best_attendance.name} (${rData.best_attendance.department})`;
+                document.getElementById('adBestAttendanceScore').textContent = `${rData.best_attendance.attendance}%`;
+            }
+            if (rData.most_consistent) {
+                document.getElementById('adMostConsistent').textContent = `${rData.most_consistent.name} (${rData.most_consistent.department})`;
+                document.getElementById('adMostConsistentScore').textContent = `Score ${rData.most_consistent.consistency_score}/100`;
+            }
+        }
+
+        // Placement summary
+        if (pData.success) {
+            document.getElementById('admHighlyReady').textContent = pData.highly_ready_count ?? 0;
+            document.getElementById('adPlacementHighly').textContent = pData.highly_ready_count ?? 0;
+            document.getElementById('adPlacementReady').textContent = pData.placement_ready_count ?? 0;
+            document.getElementById('adPlacementNeeds').textContent = pData.needs_improvement_count ?? 0;
+            document.getElementById('adPlacementNotReady').textContent = pData.not_ready_count ?? 0;
+        }
+    } catch (err) {
+        console.error('Error loading admin rankings and placement:', err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadAdminUsers();
+    loadDepartmentAnalytics();
+    loadAdminRankingsAndPlacement();
+});
+</script>
+{% endblock %}

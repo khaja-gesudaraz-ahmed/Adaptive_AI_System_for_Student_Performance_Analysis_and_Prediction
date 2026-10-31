@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}HOD Portal Login | Student Performance Analyzer & Marks Prediction System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+
+            <div class="card card-custom shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-slate-900 text-white text-center py-4 border-0">
+                    <span class="badge bg-warning-subtle text-warning px-3 py-1 rounded-pill fw-bold text-uppercase mb-2">Executive Department Oversight</span>
+                    <h4 class="fw-bold mb-0"><i class="fa-solid fa-user-tie text-warning me-2"></i> HOD Login</h4>
+                </div>
+
+                <div class="card-body p-4">
+                    <div id="loginAlert" class="alert alert-danger d-none" role="alert"></div>
+
+                    <form id="hodLoginForm">
+                        <div class="mb-3">
+                            <label for="hodLoginId" class="form-label text-xs text-uppercase font-monospace fw-bold text-slate-700">HOD Login ID / Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-id-card text-muted"></i></span>
+                                <input type="text" class="form-control border-start-0 ps-0" id="hodLoginId" placeholder="e.g. HOD_CSE or hod_cse@example.com" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="hodPassword" class="form-label text-xs text-uppercase font-monospace fw-bold text-slate-700">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>
+                                <input type="password" class="form-control border-start-0 ps-0" id="hodPassword" placeholder="Enter HOD Password" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning text-dark btn-lg w-100 rounded-pill fw-bold shadow-sm" id="hodLoginBtn">
+                            <i class="fa-solid fa-right-to-bracket me-2"></i> Access Department Executive Portal
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card-footer bg-light text-center py-3 border-top border-slate-200">
+                    <span class="text-xs text-muted">Return to <a href="/student/login" class="fw-bold text-primary">Student Login</a></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('hodLoginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const loginId = document.getElementById('hodLoginId').value.trim();
+    const password = document.getElementById('hodPassword').value;
+    const alertEl = document.getElementById('loginAlert');
+    const btn = document.getElementById('hodLoginBtn');
+
+    alertEl.classList.add('d-none');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Authenticating...';
+
+    try {
+        const res = await fetch('/hod/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ login_id: loginId, password: password })
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.location.href = data.redirect || '/hod/dashboard';
+        } else {
+            alertEl.textContent = data.error || 'Authentication failed.';
+            alertEl.classList.remove('d-none');
+        }
+    } catch (err) {
+        alertEl.textContent = 'Server connection error. Please try again.';
+        alertEl.classList.remove('d-none');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket me-2"></i> Access Department Executive Portal';
+    }
+});
+</script>
+{% endblock %}

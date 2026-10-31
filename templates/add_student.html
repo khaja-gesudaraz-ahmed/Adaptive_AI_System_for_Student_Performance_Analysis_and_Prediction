@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}Student Performance Analyzer & Marks Prediction System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+
+            <div class="card card-custom shadow-sm border-0 mb-4">
+                <div class="card-header bg-slate-900 text-white p-4 border-0 rounded-top-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h3 class="fw-bold mb-1"><i class="fa-solid fa-user-plus me-2 text-primary"></i> Enter Student Details</h3>
+                            <p class="text-slate-300 small mb-0">Fill in the 3 details sections below.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <form id="addStudentForm">
+
+                        <!-- 1. Personal & Current Academic Details -->
+                        <div class="border-start border-4 border-primary ps-3 mb-4">
+                            <h5 class="fw-bold text-primary mb-1">1. Personal & Current Academic Details</h5>
+                            <p class="text-muted small mb-0">Primary identification and current academic metrics</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Student Full Name</label>
+                            <input type="text" class="form-control form-control-lg" id="name" placeholder="Enter Student Full Name" required>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Department</label>
+                                <select class="form-select" id="department">
+                                    <option value="CSE" selected>CSE</option>
+                                    <option value="ECE">ECE</option>
+                                    <option value="ISE">ISE</option>
+                                    <option value="EEE">EEE</option>
+                                    <option value="MECH">MECH</option>
+                                    <option value="CIVIL">CIVIL</option>
+                                    <option value="CSE (AI & ML)">CSE (AI & ML)</option>
+                                    <option value="CSE (DS)">CSE (DS)</option>
+                                    <option value="CSE (Cyber Security)">CSE (Cyber Security)</option>
+                                    <option value="AI&DS">AI&DS</option>
+                                    <option value="CSBS">CSBS</option>
+                                    <option value="MCA">MCA</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Semester</label>
+                                <select class="form-select" id="semester">
+                                    <option value="1">Sem 1</option>
+                                    <option value="2">Sem 2</option>
+                                    <option value="3">Sem 3</option>
+                                    <option value="4">Sem 4</option>
+                                    <option value="5" selected>Sem 5</option>
+                                    <option value="6">Sem 6</option>
+                                    <option value="7">Sem 7</option>
+                                    <option value="8">Sem 8</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Section</label>
+                                <select class="form-select" id="section">
+                                    <option value="A" selected>Sec A</option>
+                                    <option value="B">Sec B</option>
+                                    <option value="C">Sec C</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Current CGPA</label>
+                                <input type="number" step="0.01" min="0" max="10" class="form-control" id="cgpa" placeholder="e.g. 7.8" value="7.8">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Attendance (%)</label>
+                                <input type="number" min="0" max="100" class="form-control" id="attendance" placeholder="e.g. 78" value="78" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Study Hours / Day</label>
+                                <input type="number" step="0.5" min="0" max="18" class="form-control" id="study_hours" placeholder="e.g. 5" value="5" required>
+                            </div>
+                        </div>
+
+                        <!-- Subjects Section (Subject 1, Subject 2, Subject 3, Subject 4) -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Subject 1</label>
+                                <input type="number" min="0" max="100" class="form-control" id="subject1_marks" placeholder="e.g. 72" value="72" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Subject 2</label>
+                                <input type="number" min="0" max="100" class="form-control" id="subject2_marks" placeholder="e.g. 68" value="68" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Subject 3</label>
+                                <input type="number" min="0" max="100" class="form-control" id="subject3_marks" placeholder="e.g. 75" value="75" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Subject 4</label>
+                                <input type="number" min="0" max="100" class="form-control" id="subject4_marks" placeholder="e.g. 70" value="70" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold">Medical Leave Status</label>
+                            <select class="form-select" id="medical_leave">
+                                <option value="No" selected>No Medical Leave</option>
+                                <option value="Yes">Yes (Medical Leave Taken)</option>
+                            </select>
+                        </div>
+
+                        <!-- 2. Educational Background -->
+                        <hr class="my-4">
+                        <div class="border-start border-4 border-warning ps-3 mb-4">
+                            <h5 class="fw-bold text-warning mb-1">2. Educational Background</h5>
+                            <p class="text-muted small mb-0">Prior schooling and academic performance metrics</p>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">10th Board</label>
+                                <select class="form-select" id="tenth_board">
+                                    <option value="CBSE" selected>CBSE</option>
+                                    <option value="ICSE">ICSE</option>
+                                    <option value="State Board">State Board</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">10th Percentage (%)</label>
+                                <input type="number" min="0" max="100" class="form-control" id="tenth_percentage" value="85">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">12th Board / Diploma</label>
+                                <select class="form-select" id="twelfth_board">
+                                    <option value="CBSE" selected>CBSE</option>
+                                    <option value="ICSE">ICSE</option>
+                                    <option value="State Board">State Board</option>
+                                    <option value="Diploma">Diploma</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">12th Percentage (%)</label>
+                                <input type="number" min="0" max="100" class="form-control" id="twelfth_percentage" value="82">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">School Type</label>
+                                <select class="form-select" id="school_type">
+                                    <option value="Private" selected>Private</option>
+                                    <option value="Government">Government</option>
+                                    <option value="Aided">Aided</option>
+                                    <option value="International">International</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">School Location</label>
+                                <select class="form-select" id="school_location">
+                                    <option value="Urban" selected>Urban</option>
+                                    <option value="Rural">Rural</option>
+                                    <option value="Semi-Urban">Semi-Urban</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 3. Technology Access & Career Profile -->
+                        <hr class="my-4">
+                        <div class="border-start border-4 border-success ps-3 mb-4">
+                            <h5 class="fw-bold text-success mb-1">3. Technology Access & Skills</h5>
+                            <p class="text-muted small mb-0">Hardware access, programming experience, and portfolio</p>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Owns Laptop/Computer</label>
+                                <select class="form-select" id="own_laptop">
+                                    <option value="Yes" selected>Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Smartphone Available</label>
+                                <select class="form-select" id="smartphone">
+                                    <option value="Yes" selected>Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Internet at Home</label>
+                                <select class="form-select" id="internet">
+                                    <option value="Yes" selected>Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Laptop Usage (Years)</label>
+                                <input type="number" step="0.5" min="0" max="10" class="form-control" id="laptop_years" value="2">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Prog. Experience (Years)</label>
+                                <input type="number" step="0.5" min="0" max="10" class="form-control" id="programming_experience" placeholder="e.g. 1" value="1">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Projects Built</label>
+                                <input type="number" min="0" max="20" class="form-control" id="projects_count" value="2">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Internships</label>
+                                <input type="number" min="0" max="10" class="form-control" id="internships_count" value="1">
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-top">
+                            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow" id="btnSubmitAdd">
+                                <i class="fa-solid fa-wand-magic-sparkles me-2"></i> Analyze Student & Open Dashboard
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.getElementById('addStudentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmitAdd');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> Processing Analysis...`;
+
+        const s1 = parseFloat(document.getElementById('subject1_marks').value || 70);
+        const s2 = parseFloat(document.getElementById('subject2_marks').value || 70);
+        const s3 = parseFloat(document.getElementById('subject3_marks').value || 70);
+        const s4 = parseFloat(document.getElementById('subject4_marks').value || 70);
+        const avgSubjects = (s1 + s2 + s3 + s4) / 4;
+
+        const payload = {
+            name: document.getElementById('name').value,
+            department: document.getElementById('department').value,
+            semester: document.getElementById('semester').value,
+            section: document.getElementById('section').value,
+            cgpa: document.getElementById('cgpa').value,
+            attendance: document.getElementById('attendance').value,
+            study_hours: document.getElementById('study_hours').value,
+            
+            // Map Subject 1 & Subject 2 to backend dbms_marks & java_marks
+            dbms_marks: s1,
+            java_marks: s2,
+            subject3_marks: s3,
+            subject4_marks: s4,
+
+            // Auto-calculate values for removed fields so ML logic works seamlessly
+            prev_sem_percentage: roundVal(avgSubjects),
+            internal_marks: roundVal(avgSubjects),
+            coding_score: roundVal(avgSubjects),
+            communication_score: 75,
+
+            medical_leave: document.getElementById('medical_leave').value,
+
+            tenth_board: document.getElementById('tenth_board').value,
+            tenth_percentage: document.getElementById('tenth_percentage').value,
+            twelfth_board: document.getElementById('twelfth_board').value,
+            twelfth_percentage: document.getElementById('twelfth_percentage').value,
+            school_type: document.getElementById('school_type').value,
+            school_location: document.getElementById('school_location').value,
+
+            own_laptop: document.getElementById('own_laptop').value,
+            smartphone: document.getElementById('smartphone').value,
+            internet: document.getElementById('internet').value,
+            laptop_years: document.getElementById('laptop_years').value,
+            programming_experience: document.getElementById('programming_experience').value,
+            projects_count: document.getElementById('projects_count').value,
+            internships_count: document.getElementById('internships_count').value
+        };
+
+        function roundVal(v) {
+            return Math.round(v * 10) / 10;
+        }
+
+        try {
+            const res = await fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (data.success && data.redirect_url) {
+                window.location.href = data.redirect_url;
+            } else {
+                alert('Analysis Error: ' + (data.error || 'Failed to analyze student'));
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles me-2"></i> Analyze Student & Open Dashboard`;
+            }
+        } catch (err) {
+            alert('Server error: ' + err.message);
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles me-2"></i> Analyze Student & Open Dashboard`;
+        }
+    });
+</script>
+{% endblock %}
